@@ -75,6 +75,20 @@ class Interval(object):
     def __rmul__(self, other):
         return self * other
 
+    def reciprocal(self):
+        if 0 in self:
+            raise ValueError
+        # we are in __future__
+        return Interval(1 / self.left, 1 / self.right)
+
+    def __truediv__(self, other):
+        if not isinstance(other, Interval):
+            other = Interval(other)
+        return self * other.reciprocal()
+
+    def __rtruediv__(self, other):
+        return self.reciprocal() * other
+
     def __pow__(self, other):
         # a**b == e**(b*ln a)
         if not isinstance(other, Interval):
@@ -139,6 +153,11 @@ class intervalTest(unittest.TestCase):
             self.assertEqual(t in x, b)
         self.assertRaises(TypeError, x.__contains__, x)
 
+    def test_reciprocal(self):
+        self.assertEqual(Interval(2,4).reciprocal(), Interval(.5, .25))
+        self.assertEqual(Interval(-4,-8).reciprocal(), Interval(-.25, -.125))
+        self.assertRaises(ValueError, Interval(-1, 1).reciprocal)
+
     def test_ops(self):
         # unary ops
         self.assertEqual(+Interval(2,3), Interval(2,3))
@@ -157,14 +176,19 @@ class intervalTest(unittest.TestCase):
         for op in ((lambda a, b: a + b),
                    (lambda a, b: a - b),
                    (lambda a, b: a * b),
+                   (lambda a, b: a / b),
                    ):
             self.assertRaises(TypeError, op, Interval(1,2), '')
             for x in (1, Interval(2, 4), Interval(-2, -4), Interval(-2, 2)):
                 for y in (1, Interval(2, 4), Interval(-2, -4), Interval(-2, 2)):
-                    for p in range(-5, 5):
-                        for q in range(-5, 5):
-                            if p in Interval(x) and q in Interval(y):
-                                self.assertEqual(op(p, q) in Interval(op(x, y)), True)
+                    try:
+                        z = op(x, y)
+                        for p in range(-5, 5):
+                            for q in range(-5, 5):
+                                if p in Interval(x) and q in Interval(y):
+                                    self.assertEqual(op(p, q) in Interval(op(x, y)), True)
+                    except ValueError:
+                        pass
         self.assertEqual(Interval(1,2) ** 2, Interval(1,4))
         for a in self.pos_intervals():
             for b in self.pos_intervals():
