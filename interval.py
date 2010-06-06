@@ -1,3 +1,4 @@
+from __future__ import division
 import unittest
 
 class Interval(object):
@@ -73,8 +74,22 @@ class Interval(object):
     def __rmul__(self, other):
         return self * other
 
+    def __pow__(self, other):
+        # a**b == e**(b*ln a)
+        if not isinstance(other, Interval):
+            other = Interval(other)
+        assert self.left >= 0
+        assert other.left >= 0
+        points = [a**b for a in self.points for b in other.points]
+        return Interval(min(points), max(points))
+        
 
 class intervalTest(unittest.TestCase):
+    def pos_intervals(self):
+        for p in xrange(0, 8):
+            for q in xrange(0, 8):
+                yield Interval(p / 2, q / 2)
+
     def test_basic(self):
         for left in (1, 2, 3):
             for right in (4,5,6):
@@ -145,6 +160,14 @@ class intervalTest(unittest.TestCase):
                         for q in range(-5, 5):
                             if p in Interval(x) and q in Interval(y):
                                 self.assertEqual(op(p, q) in Interval(op(x, y)), True)
+        self.assertEqual(Interval(1,2) ** 2, Interval(1,4))
+        for a in self.pos_intervals():
+            for b in self.pos_intervals():
+                result = a ** b
+                self.assertTrue(a.left ** b.left in result)
+                self.assertTrue(a.left ** b.right in result)
+                self.assertTrue(a.right ** b.left in result)
+                self.assertTrue(a.right ** b.right in result)
 
 if __name__ == '__main__':
     unittest.main()
