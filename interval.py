@@ -1,4 +1,5 @@
 from __future__ import division
+from math import floor
 import unittest
 
 class Interval(object):
@@ -78,6 +79,10 @@ class Interval(object):
         # a**b == e**(b*ln a)
         if not isinstance(other, Interval):
             other = Interval(other)
+        # Negative number to a fractional power is not defined
+        if self.left < 0 and (other.left != other.right or
+                              other.left != floor(other.left)):
+            raise ValueError
         assert self.left >= 0
         assert other.left >= 0
         points = [a**b for a in self.points for b in other.points]
@@ -168,6 +173,8 @@ class intervalTest(unittest.TestCase):
                 self.assertTrue(a.left ** b.right in result)
                 self.assertTrue(a.right ** b.left in result)
                 self.assertTrue(a.right ** b.right in result)
+        self.assertRaises(ValueError, Interval(-1,-1).__pow__, Interval(1, 2))
+        self.assertRaises(ValueError, Interval(-1,-1).__pow__, 1.5)
 
 if __name__ == '__main__':
     unittest.main()
