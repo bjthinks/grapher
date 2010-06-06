@@ -53,16 +53,25 @@ class Interval(object):
             other = Interval(other)
         return Interval(self.left + other.left, self.right + other.right)
 
+    def __radd__(self, other):
+        return self + other
+
     def __sub__(self, other):
         if not isinstance(other, Interval):
             other = Interval(other)
         return Interval(self.left - other.right, self.right - other.left)
+
+    def __rsub__(self, other):
+        return (-self) + other
 
     def __mul__(self, other):
         if not isinstance(other, Interval):
             other = Interval(other)
         points = [a*b for a in self.points for b in other.points]
         return Interval(min(points), max(points))
+
+    def __rmul__(self, other):
+        return self * other
 
 
 class intervalTest(unittest.TestCase):
@@ -104,6 +113,13 @@ class intervalTest(unittest.TestCase):
         self.assertEqual(Interval(7), Interval(7,7))
         self.assertEqual(Interval(Interval(1,2)), Interval(1,2))
 
+    def test_contains(self):
+        x = Interval(3, 5)
+        for t, b in ((2, False), (3, True), (4, True), (5, True), (6, False)):
+            self.assertEqual(t in x, b)
+        self.assertRaises(TypeError, x.__contains__, x)
+
+    def test_ops(self):
         # unary ops
         self.assertEqual(+Interval(2,3), Interval(2,3))
         self.assertEqual(-Interval(2,3), Interval(-2,-3))
@@ -118,24 +134,17 @@ class intervalTest(unittest.TestCase):
         self.assertEqual(Interval(1,2) - Interval(1), Interval(0,1))
         self.assertEqual(Interval(1,2) * Interval(3,4), Interval(3,8))
 
-    def test_contains(self):
-        x = Interval(3, 5)
-        for t, b in ((2, False), (3, True), (4, True), (5, True), (6, False)):
-            self.assertEqual(t in x, b)
-        self.assertRaises(TypeError, x.__contains__, x)
-
-    def test_xxx(self):
         for op in ((lambda a, b: a + b),
                    (lambda a, b: a - b),
                    (lambda a, b: a * b),
                    ):
             self.assertRaises(TypeError, op, Interval(1,2), '')
-            for x in (Interval(2, 4), Interval(-2, -4), Interval(-2, 2)):
-                for y in (Interval(2, 4), Interval(-2, -4), Interval(-2, 2)):
+            for x in (1, Interval(2, 4), Interval(-2, -4), Interval(-2, 2)):
+                for y in (1, Interval(2, 4), Interval(-2, -4), Interval(-2, 2)):
                     for p in range(-5, 5):
                         for q in range(-5, 5):
-                            if p in x and q in y:
-                                self.assertEqual(op(p, q) in op(x, y), True)
+                            if p in Interval(x) and q in Interval(y):
+                                self.assertEqual(op(p, q) in Interval(op(x, y)), True)
 
 if __name__ == '__main__':
     unittest.main()
