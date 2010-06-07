@@ -46,6 +46,17 @@ class ProductFunction(Function):
         return self.__f(param) * self.__g(param)
 
 
+class PowerFunction(Function):
+    def __init__(self, f, g):
+        assert isinstance(f, Function)
+        assert isinstance(g, Function)
+        self.__f = f
+        self.__g = g
+
+    def __call__(self, param):
+        return self.__f(param) ** self.__g(param)
+
+
 class _FunctionUnitTests(unittest.TestCase):
     def intervals(self):
         for p in xrange(-2, 3):
@@ -78,6 +89,22 @@ class _FunctionUnitTests(unittest.TestCase):
         for i in self.intervals():
             self.assertEqual(i*i, ProductFunction(IdentityFunction(),
                                                   IdentityFunction())(i))
+
+    def test_power(self):
+        for val in xrange(5):
+            self.assertEqual(34**val, PowerFunction(ConstFunction(34),
+                                                    IdentityFunction())(val))
+        for val in xrange(5):
+            self.assertEqual(val**34, PowerFunction(IdentityFunction(),
+                                                    ConstFunction(34))(val))
+        for i in self.intervals():
+            try:
+                expected = i**i
+            except ValueError:
+                continue
+            self.assertEqual(expected, PowerFunction(IdentityFunction(),
+                                                     IdentityFunction())(i))
+
 
 if __name__ == '__main__':
     unittest.main()
