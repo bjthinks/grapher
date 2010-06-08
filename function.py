@@ -87,8 +87,9 @@ class _FunctionUnitTests(unittest.TestCase):
             self.assertEqual(val*34, ProductFunction(ConstFunction(34),
                                                      IdentityFunction())(val))
         for i in self.intervals():
-            self.assertEqual(i*i, ProductFunction(IdentityFunction(),
-                                                  IdentityFunction())(i))
+            for j in self.intervals():
+                self.assertEqual(i*j, ProductFunction(ConstFunction(i),
+                                                      ConstFunction(j))(0))
 
     def test_power(self):
         for val in xrange(5):
