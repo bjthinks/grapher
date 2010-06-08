@@ -88,8 +88,6 @@ class QuotientFunction(Function):
 
     def __call__(self, param):
         # Do we want to convert ZeroDivisionError into ValueError here?
-        # Or is it time to invent our own exception, like a DomainError?
-        # Should we use the same exception protocol for Interval & Function?
         return self.__f(param) / self.__g(param)
 
     def __str__(self):
