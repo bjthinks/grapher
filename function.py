@@ -11,6 +11,10 @@ class Function(object):
         pass
 
     @abc.abstractmethod
+    def derivative(self):
+        pass
+
+    @abc.abstractmethod
     def __str__(self):
         pass
 
@@ -26,6 +30,9 @@ class ConstFunction(Function):
     def __call__(self, param):
         return self.__k
 
+    def derivative(self):
+        return ConstFunction(0)
+
     def __str__(self):
         return str(self.__k)
 
@@ -36,6 +43,9 @@ class ConstFunction(Function):
 class IdentityFunction(Function):
     def __call__(self, param):
         return param
+
+    def derivative(self):
+        return ConstFunction(1)
 
     def __str__(self):
         return 'x'
@@ -54,6 +64,9 @@ class SumFunction(Function):
     def __call__(self, param):
         return self.__f(param) + self.__g(param)
 
+    def derivative(self):
+        return SumFunction(self.__f.derivative(), self.__g.derivative())
+
     def __str__(self):
         return '({0} + {1})'.format(str(self.__f), str(self.__g))
 
@@ -70,6 +83,10 @@ class ProductFunction(Function):
 
     def __call__(self, param):
         return self.__f(param) * self.__g(param)
+
+    def derivative(self):
+        return SumFunction(ProductFunction(self.__f.derivative(), self.__g),
+                           ProductFunction(self.__f, self.__g.derivative()))
 
     def __str__(self):
         return '({0} * {1})'.format(str(self.__f), str(self.__g))
@@ -90,6 +107,15 @@ class QuotientFunction(Function):
         # Do we want to convert ZeroDivisionError into ValueError here?
         return self.__f(param) / self.__g(param)
 
+    def derivative(self):
+        return QuotientFunction(SumFunction(
+                ProductFunction(self.__f.derivative(), self.__g),
+                ProductFunction(ConstFunction(-1),
+                                ProductFunction(self.__f,
+                                                self.__g.derivative()))),
+                # this part should use PowerFunction
+                ProductFunction(self.__g, self.__g))
+
     def __str__(self):
         return '({0} / {1})'.format(str(self.__f), str(self.__g))
 
@@ -107,6 +133,10 @@ class PowerFunction(Function):
 
     def __call__(self, param):
         return self.__f(param) ** self.__g(param)
+
+    def derivative(self):
+        # Need natural log
+        raise ValueError
 
     def __str__(self):
         return '({0} ** {1})'.format(str(self.__f), str(self.__g))
