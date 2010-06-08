@@ -46,6 +46,20 @@ class ProductFunction(Function):
         return self.__f(param) * self.__g(param)
 
 
+class QuotientFunction(Function):
+    def __init__(self, f, g):
+        assert isinstance(f, Function)
+        assert isinstance(g, Function)
+        self.__f = f
+        self.__g = g
+
+    def __call__(self, param):
+        # Do we want to convert ZeroDivisionError into ValueError here?
+        # Or is it time to invent our own exception, like a DomainError?
+        # Should we use the same exception protocol for Interval & Function?
+        return self.__f(param) / self.__g(param)
+
+
 class PowerFunction(Function):
     def __init__(self, f, g):
         assert isinstance(f, Function)
@@ -90,6 +104,12 @@ class _FunctionUnitTests(unittest.TestCase):
             for j in self.intervals():
                 self.assertEqual(i*j, ProductFunction(ConstFunction(i),
                                                       ConstFunction(j))(0))
+
+    def test_quotient(self):
+        for v in xrange(5):
+            for w in xrange(1,5):
+                self.assertEqual(v/w, QuotientFunction(ConstFunction(v),
+                                                       IdentityFunction())(w))
 
     def test_power(self):
         for val in xrange(5):
