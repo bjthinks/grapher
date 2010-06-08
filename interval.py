@@ -98,21 +98,23 @@ class Interval(object):
             if other.left != other.right or other.left != floor(other.left):
                 raise ValueError
             # other is an integer
+            other = long(other.left)
             # if other is zero, then result is Interval(1)
-            if 0 in other:
+            if other == 0:
                 return Interval(1)
             # if other is positive and odd, then result is
             # [self.left ** other, self.right ** other]
             # if other is positive and even, and self does not include 0,
             # then result is [self.right ** other, self.left ** other]
-            elif other.left > 0:
-                if other.left % 2 != 0 or 0 not in self:
-                    return Interval(self.left ** other.left,
-                                    self.right ** other.left)
-            # if other is positive and even, and self does include 0, then result is [0, max(self.left ** other, self.right ** other)]
+            elif other > 0:
+                if other % 2 != 0 or 0 not in self:
+                    return Interval(self.left ** other,
+                                    self.right ** other)
+            # if other is positive and even, and self does include 0,
+            # then result is [0, max(self.left ** other, self.right ** other)]
                 else:
-                    return Interval(0, max(self.left ** other.left,
-                                           self.right ** other.left))
+                    return Interval(0, max(self.left ** other,
+                                           self.right ** other))
             # if other is negative, result is 1 / (self ** -other)
             else:
                 return 1 / (self ** -other)
