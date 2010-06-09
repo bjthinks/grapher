@@ -218,8 +218,10 @@ class _FunctionUnitTests(unittest.TestCase):
                                                      IdentityFunction())(val))
         for i in self.intervals():
             for j in self.intervals():
-                self.assertEqual(i*j, ProductFunction(self.interval_function(i),
-                                                      self.interval_function(j))(Interval(0, 1)))
+                self.assertEqual(i*j,
+                                 ProductFunction(self.interval_function(i),
+                                                 self.interval_function(j))
+                                 (Interval(0, 1)))
         self.assertEqual(str(ProductFunction(ConstFunction(1),
                                              ConstFunction(2))),
                          '(1 * 2)')
