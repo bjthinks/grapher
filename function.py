@@ -138,8 +138,15 @@ class PowerFunction(Function):
         return self.__f(param) ** self.__g(param)
 
     def derivative(self):
-        # Need natural log
-        raise ValueError
+        # f(x) ** g(x) * Dg(x) * log(f(x)) + f(x) ** (g(x) - 1) * g(x) * Df(x)
+        return SumFunction(
+            ProductFunction(self,
+                            ProductFunction(self.__g.derivative(),
+                                            NaturalLogFunction(self.__f))),
+            ProductFunction(PowerFunction(self.__f,
+                                          SumFunction(self.__g,
+                                                      ConstFunction(-1))),
+                            ProductFunction(self.__g, self.__f.derivative())))
 
     def __str__(self):
         return '({0} ** {1})'.format(self.__f, self.__g)
@@ -300,7 +307,26 @@ class _FunctionUnitTests(unittest.TestCase):
         self.assertEqual(repr(PowerFunction(ConstFunction(1),
                                             ConstFunction(2))),
                          'PowerFunction(ConstFunction(1), ConstFunction(2))')
-        # Need some tests of derivative, once it's implemented
+        for v in [2, 3, 4, 5, 6.666]:
+            self.numericalDerivativeTest(PowerFunction(
+                    IdentityFunction(), ConstFunction(v)))
+            self.numericalDerivativeTest(PowerFunction(
+                    ConstFunction(v), IdentityFunction()))
+        self.numericalDerivativeTest(PowerFunction(
+                IdentityFunction(), IdentityFunction()))
+        # x^2 + 3x + 5
+        f = PowerFunction(IdentityFunction(), ConstFunction(2))
+        f = SumFunction(f, ProductFunction(IdentityFunction(),
+                                           ConstFunction(3)))
+        f = SumFunction(f, ConstFunction(5))
+        # 4x^2 + 7x + 2
+        g = PowerFunction(IdentityFunction(), ConstFunction(2))
+        g = ProductFunction(g, ConstFunction(4))
+        g = SumFunction(g, ProductFunction(IdentityFunction(),
+                                           ConstFunction(7)))
+        g = SumFunction(g, ConstFunction(2))
+        self.numericalDerivativeTest(PowerFunction(f, g))
+                                        
 
     def test_natural_log(self):
         for val in xrange(1, 5):
