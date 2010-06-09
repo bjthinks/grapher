@@ -1,6 +1,7 @@
 from __future__ import division
 import abc
 from interval import Interval
+from math import log
 import unittest
 
 
@@ -147,6 +148,29 @@ class PowerFunction(Function):
         return 'PowerFunction({0!r}, {1!r})'.format(self.__f, self.__g)
 
 
+class NaturalLogFunction(Function):
+    def __init__(self, f):
+        assert isinstance(f, Function)
+        self.__f = f
+
+    def __call__(self, param):
+        f_value = self.__f(param)
+        if isinstance(f_value, Interval):
+            return Interval.log(f_value)
+        else:
+            return log(f_value)
+
+    def derivative(self):
+        # d ln f(x)/dx = f'(x)/f(x)
+        return QuotientFunction(self.__f.derivative(), self.__f)
+
+    def __str__(self):
+        return 'ln({0})'.format(self.__f)
+
+    def __repr__(self):
+        return 'NaturalLogFunction({0})'.format(repr(self.__f))
+
+
 class _FunctionUnitTests(unittest.TestCase):
     def intervals(self):
         for p in xrange(-2, 3):
@@ -277,6 +301,28 @@ class _FunctionUnitTests(unittest.TestCase):
                                             ConstFunction(2))),
                          'PowerFunction(ConstFunction(1), ConstFunction(2))')
         # Need some tests of derivative, once it's implemented
+
+    def test_natural_log(self):
+        for val in xrange(1, 5):
+            self.assertEqual(log(val),
+                             NaturalLogFunction(IdentityFunction())(val))
+        for i in self.intervals():
+            try:
+                expected = i.log()
+            except ValueError:
+                continue
+            self.assertEqual(expected,
+                             NaturalLogFunction(IdentityFunction())(i))
+        self.assertEqual(str(NaturalLogFunction(ConstFunction(5))), 'ln(5)')
+        self.assertEqual(repr(NaturalLogFunction(ConstFunction(5))),
+                         'NaturalLogFunction(ConstFunction(5))')
+        self.numericalDerivativeTest(NaturalLogFunction(IdentityFunction()))
+        self.numericalDerivativeTest(
+            NaturalLogFunction(
+                SumFunction(IdentityFunction(), ConstFunction(1))))
+        self.numericalDerivativeTest(
+            NaturalLogFunction(
+                ProductFunction(IdentityFunction(), ConstFunction(2))))
 
 
 if __name__ == '__main__':
