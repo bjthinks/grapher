@@ -23,8 +23,36 @@ class Function(object):
     def __repr__(self):
         pass
 
+    @staticmethod
+    def constant(k):
+        return _ConstFunction(k)
 
-class ConstFunction(Function):
+    @staticmethod
+    def identity():
+        return _IdentityFunction()
+
+    def __add__(self, g):
+        if not isinstance(g, Function):
+            return NotImplemented
+        return _SumFunction(self, g)
+
+    def __mul__(self, g):
+        if not isinstance(g, Function):
+            return NotImplemented
+        return _ProductFunction(self, g)
+
+    def __truediv__(self, g):
+        if not isinstance(g, Function):
+            return NotImplemented
+        return _QuotientFunction(self, g)
+
+    def __pow__(self, g):
+        if not isinstance(g, Function):
+            return NotImplemented
+        return _PowerFunction(self, g)
+
+
+class _ConstFunction(Function):
     def __init__(self, k):
         # A ConstFunction can't be initialized using an interval--it
         # is intended to represent a single constant value.
@@ -35,30 +63,30 @@ class ConstFunction(Function):
         return self.__k
 
     def derivative(self):
-        return ConstFunction(0)
+        return self.constant(0)
 
     def __str__(self):
         return str(self.__k)
 
     def __repr__(self):
-        return 'ConstFunction({0})'.format(repr(self.__k))
+        return 'Function.constant({0})'.format(repr(self.__k))
 
 
-class IdentityFunction(Function):
+class _IdentityFunction(Function):
     def __call__(self, param):
         return param
 
     def derivative(self):
-        return ConstFunction(1)
+        return self.constant(1)
 
     def __str__(self):
         return 'x'
 
     def __repr__(self):
-        return 'IdentityFunction()'
+        return 'Function.identity()'
 
 
-class SumFunction(Function):
+class _SumFunction(Function):
     def __init__(self, f, g):
         assert isinstance(f, Function)
         assert isinstance(g, Function)
@@ -69,16 +97,16 @@ class SumFunction(Function):
         return self.__f(param) + self.__g(param)
 
     def derivative(self):
-        return SumFunction(self.__f.derivative(), self.__g.derivative())
+        return self.__f.derivative() + self.__g.derivative()
 
     def __str__(self):
         return '({0} + {1})'.format(str(self.__f), str(self.__g))
 
     def __repr__(self):
-        return 'SumFunction({0}, {1})'.format(repr(self.__f), repr(self.__g))
+        return '({0} + {1})'.format(repr(self.__f), repr(self.__g))
 
 
-class ProductFunction(Function):
+class _ProductFunction(Function):
     def __init__(self, f, g):
         assert isinstance(f, Function)
         assert isinstance(g, Function)
@@ -89,18 +117,18 @@ class ProductFunction(Function):
         return self.__f(param) * self.__g(param)
 
     def derivative(self):
-        return SumFunction(ProductFunction(self.__f.derivative(), self.__g),
-                           ProductFunction(self.__f, self.__g.derivative()))
+        return self.__f.derivative() * self.__g + \
+            self.__f * self.__g.derivative()
 
     def __str__(self):
         return '({0} * {1})'.format(str(self.__f), str(self.__g))
 
     def __repr__(self):
-        return 'ProductFunction({0}, {1})'.format(
+        return '({0} * {1})'.format(
             repr(self.__f), repr(self.__g))
 
 
-class QuotientFunction(Function):
+class _QuotientFunction(Function):
     def __init__(self, f, g):
         assert isinstance(f, Function)
         assert isinstance(g, Function)
@@ -112,23 +140,20 @@ class QuotientFunction(Function):
         return self.__f(param) / self.__g(param)
 
     def derivative(self):
-        return QuotientFunction(SumFunction(
-                ProductFunction(self.__f.derivative(), self.__g),
-                ProductFunction(ConstFunction(-1),
-                                ProductFunction(self.__f,
-                                                self.__g.derivative()))),
-                # this part should use PowerFunction
-                ProductFunction(self.__g, self.__g))
+        return ((self.__f.derivative() * self.__g +
+                 self.constant(-1) * self.__f * self.__g.derivative())
+                # this part should use _PowerFunction
+                / (self.__g * self.__g))
 
     def __str__(self):
         return '({0} / {1})'.format(str(self.__f), str(self.__g))
 
     def __repr__(self):
-        return 'QuotientFunction({0}, {1})'.format(
+        return '({0} / {1})'.format(
             repr(self.__f), repr(self.__g))
 
 
-class PowerFunction(Function):
+class _PowerFunction(Function):
     def __init__(self, f, g):
         assert isinstance(f, Function)
         assert isinstance(g, Function)
@@ -146,7 +171,7 @@ class PowerFunction(Function):
         return '({0} ** {1})'.format(str(self.__f), str(self.__g))
 
     def __repr__(self):
-        return 'PowerFunction({0}, {1})'.format(repr(self.__f), repr(self.__g))
+        return '({0} ** {1})'.format(repr(self.__f), repr(self.__g))
 
 
 class _FunctionUnitTests(unittest.TestCase):
@@ -160,10 +185,8 @@ class _FunctionUnitTests(unittest.TestCase):
         """Create a function which, when evaluated over the interval
         [0, 1], takes on values in the interval i."""
         assert isinstance(i, Interval)
-        return SumFunction(
-            ProductFunction(ConstFunction(i.right - i.left),
-                            IdentityFunction()),
-            ConstFunction(i.left))
+        return Function.constant(i.right - i.left) * \
+            Function.identity() + Function.constant(i.left)
 
     def numericalDerivativeTest(self, f):
         h = 1e-6
@@ -178,104 +201,97 @@ class _FunctionUnitTests(unittest.TestCase):
 
     def test_const(self):
         for val in xrange(5):
-            self.assertEqual(val, ConstFunction(val)(87))
-            self.assertEqual(val, ConstFunction(val)(Interval(2,6)))
-        self.assertEqual(str(ConstFunction(3)), '3')
-        self.assertEqual(repr(ConstFunction(3)), 'ConstFunction(3)')
-        self.assertEqual(ConstFunction(5).derivative()(3.67), 0)
+            self.assertEqual(val, Function.constant(val)(87))
+            self.assertEqual(val, Function.constant(val)(Interval(2,6)))
+        self.assertEqual(str(Function.constant(3)), '3')
+        self.assertEqual(repr(Function.constant(3)), 'Function.constant(3)')
+        self.assertEqual(Function.constant(5).derivative()(3.67), 0)
 
     def test_identity(self):
         for val in xrange(5):
-            self.assertEqual(val, IdentityFunction()(val))
+            self.assertEqual(val, Function.identity()(val))
         for i in self.intervals():
-            self.assertEqual(i, IdentityFunction()(i))
-        self.assertEqual(str(IdentityFunction()), 'x')
-        self.assertEqual(repr(IdentityFunction()), 'IdentityFunction()')
-        self.assertEqual(IdentityFunction().derivative()(6), 1)
-        self.numericalDerivativeTest(IdentityFunction())
+            self.assertEqual(i, Function.identity()(i))
+        self.assertEqual(str(Function.identity()), 'x')
+        self.assertEqual(repr(Function.identity()), 'Function.identity()')
+        self.assertEqual(Function.identity().derivative()(6), 1)
+        self.numericalDerivativeTest(Function.identity())
 
     def test_sum(self):
         for val in xrange(5):
-            self.assertEqual(val+34, SumFunction(ConstFunction(34),
-                                                 IdentityFunction())(val))
+            self.assertEqual(val+34, (Function.constant(34) +
+                                      Function.identity())(val))
         for i in self.intervals():
-            self.assertEqual(i+i, SumFunction(IdentityFunction(),
-                                              IdentityFunction())(i))
-        self.assertEqual(str(SumFunction(ConstFunction(1), ConstFunction(2))),
+            self.assertEqual(i+i, (Function.identity() +
+                                   Function.identity())(i))
+        self.assertEqual(str(Function.constant(1) + Function.constant(2)),
                          '(1 + 2)')
-        self.assertEqual(repr(SumFunction(ConstFunction(1), ConstFunction(2))),
-                         'SumFunction(ConstFunction(1), ConstFunction(2))')
-        self.assertEqual(SumFunction(IdentityFunction(),
-                                     ConstFunction(5)).derivative()(8), 1)
-        self.numericalDerivativeTest(SumFunction(IdentityFunction(),
-                                                 IdentityFunction()))
-        self.numericalDerivativeTest(SumFunction(IdentityFunction(),
-                                                 ConstFunction(5)))
+        self.assertEqual(repr(Function.constant(1) + Function.constant(2)),
+                         '(Function.constant(1) + Function.constant(2))')
+        self.assertEqual((Function.identity() +
+                          Function.constant(5)).derivative()(8), 1)
+        self.numericalDerivativeTest(Function.identity() + Function.identity())
+        self.numericalDerivativeTest(Function.identity() + \
+                                         Function.constant(5))
 
     def test_product(self):
         for val in xrange(5):
-            self.assertEqual(val*34, ProductFunction(ConstFunction(34),
-                                                     IdentityFunction())(val))
+            self.assertEqual(val*34, (Function.constant(34) *
+                                      Function.identity())(val))
         for i in self.intervals():
             for j in self.intervals():
                 self.assertEqual(i*j,
-                                 ProductFunction(self.interval_function(i),
-                                                 self.interval_function(j))
+                                 (self.interval_function(i) *
+                                  self.interval_function(j))
                                  (Interval(0, 1)))
-        self.assertEqual(str(ProductFunction(ConstFunction(1),
-                                             ConstFunction(2))),
+        self.assertEqual(str(Function.constant(1) *
+                             Function.constant(2)),
                          '(1 * 2)')
-        self.assertEqual(repr(ProductFunction(ConstFunction(1),
-                                              ConstFunction(2))),
-                         'ProductFunction(ConstFunction(1), ConstFunction(2))')
-        self.assertEqual(ProductFunction(IdentityFunction(),
-                                         ConstFunction(4)).derivative()(7), 4)
-        self.numericalDerivativeTest(ProductFunction(IdentityFunction(),
-                                                     IdentityFunction()))
-        self.numericalDerivativeTest(ProductFunction(IdentityFunction(),
-                                                     ConstFunction(5)))
+        self.assertEqual(repr(Function.constant(1) *
+                              Function.constant(2)),
+                         '(Function.constant(1) * Function.constant(2))')
+        self.assertEqual((Function.identity() *
+                          Function.constant(4)).derivative()(7), 4)
+        self.numericalDerivativeTest(Function.identity() * Function.identity())
+        self.numericalDerivativeTest(Function.identity() *
+                                     Function.constant(5))
 
     def test_quotient(self):
         for v in xrange(5):
             for w in xrange(1,5):
-                self.assertEqual(v/w, QuotientFunction(ConstFunction(v),
-                                                       IdentityFunction())(w))
-        self.assertEqual(str(QuotientFunction(ConstFunction(1),
-                                              ConstFunction(2))),
+                self.assertEqual(v/w, (Function.constant(v) /
+                                       Function.identity())(w))
+        self.assertEqual(str(Function.constant(1) / Function.constant(2)),
                          '(1 / 2)')
-        self.assertEqual(repr(QuotientFunction(ConstFunction(1),
-                                               ConstFunction(2))),
-                         'QuotientFunction(ConstFunction(1), ConstFunction(2))'
-                         )
+        self.assertEqual(repr(Function.constant(1) / Function.constant(2)),
+                         '(Function.constant(1) / Function.constant(2))')
         # Floating point is exact for small powers of two
-        self.assertEqual(QuotientFunction(ConstFunction(1),
-                                          IdentityFunction()).derivative()(2),
+        self.assertEqual((Function.constant(1) /
+                          Function.identity()).derivative()(2),
                          -0.25)
-        self.numericalDerivativeTest(QuotientFunction(ConstFunction(3),
-                                                      IdentityFunction()))
-        self.numericalDerivativeTest(QuotientFunction(IdentityFunction(),
-                                                      ConstFunction(5)))
+        self.numericalDerivativeTest(Function.constant(3) /
+                                     Function.identity())
+        self.numericalDerivativeTest(Function.identity() /
+                                     Function.constant(5))
 
     def test_power(self):
         for val in xrange(5):
-            self.assertEqual(34**val, PowerFunction(ConstFunction(34),
-                                                    IdentityFunction())(val))
+            self.assertEqual(34**val, (Function.constant(34) **
+                                       Function.identity())(val))
         for val in xrange(5):
-            self.assertEqual(val**34, PowerFunction(IdentityFunction(),
-                                                    ConstFunction(34))(val))
+            self.assertEqual(val**34, (Function.identity() **
+                                       Function.constant(34))(val))
         for i in self.intervals():
             try:
                 expected = i**i
             except ValueError:
                 continue
-            self.assertEqual(expected, PowerFunction(IdentityFunction(),
-                                                     IdentityFunction())(i))
-        self.assertEqual(str(PowerFunction(ConstFunction(1),
-                                           ConstFunction(2))),
+            self.assertEqual(expected, (Function.identity() **
+                                        Function.identity())(i))
+        self.assertEqual(str(Function.constant(1) ** Function.constant(2)),
                          '(1 ** 2)')
-        self.assertEqual(repr(PowerFunction(ConstFunction(1),
-                                            ConstFunction(2))),
-                         'PowerFunction(ConstFunction(1), ConstFunction(2))')
+        self.assertEqual(repr(Function.constant(1) ** Function.constant(2)),
+                         '(Function.constant(1) ** Function.constant(2))')
         # Need some tests of derivative, once it's implemented
 
 
