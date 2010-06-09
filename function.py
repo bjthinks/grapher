@@ -72,7 +72,7 @@ class SumFunction(Function):
         return SumFunction(self.__f.derivative(), self.__g.derivative())
 
     def __str__(self):
-        return '({0} + {1})'.format(str(self.__f), str(self.__g))
+        return '({0} + {1})'.format(self.__f, self.__g)
 
     def __repr__(self):
         return 'SumFunction({0}, {1})'.format(repr(self.__f), repr(self.__g))
@@ -93,7 +93,7 @@ class ProductFunction(Function):
                            ProductFunction(self.__f, self.__g.derivative()))
 
     def __str__(self):
-        return '({0} * {1})'.format(str(self.__f), str(self.__g))
+        return '({0} * {1})'.format(self.__f, self.__g)
 
     def __repr__(self):
         return 'ProductFunction({0}, {1})'.format(
@@ -121,7 +121,7 @@ class QuotientFunction(Function):
                 ProductFunction(self.__g, self.__g))
 
     def __str__(self):
-        return '({0} / {1})'.format(str(self.__f), str(self.__g))
+        return '({0} / {1})'.format(self.__f, self.__g)
 
     def __repr__(self):
         return 'QuotientFunction({0}, {1})'.format(
@@ -143,7 +143,7 @@ class PowerFunction(Function):
         raise ValueError
 
     def __str__(self):
-        return '({0} ** {1})'.format(str(self.__f), str(self.__g))
+        return '({0} ** {1})'.format(self.__f, self.__g)
 
     def __repr__(self):
         return 'PowerFunction({0}, {1})'.format(repr(self.__f), repr(self.__g))
