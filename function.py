@@ -199,8 +199,10 @@ class _FunctionUnitTests(unittest.TestCase):
             self.assertEqual(val+34, SumFunction(ConstFunction(34),
                                                  IdentityFunction())(val))
         for i in self.intervals():
-            self.assertEqual(i+i, SumFunction(IdentityFunction(),
-                                              IdentityFunction())(i))
+            for j in self.intervals():
+                sum_func = SumFunction(self.interval_function(i),
+                                       self.interval_function(j))
+                self.assertEqual(i+j, sum_func(Interval(0, 1)))
         self.assertEqual(str(SumFunction(ConstFunction(1), ConstFunction(2))),
                          '(1 + 2)')
         self.assertEqual(repr(SumFunction(ConstFunction(1), ConstFunction(2))),
