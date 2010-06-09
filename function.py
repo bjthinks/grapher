@@ -41,7 +41,7 @@ class ConstFunction(Function):
         return str(self.__k)
 
     def __repr__(self):
-        return 'ConstFunction({0})'.format(repr(self.__k))
+        return 'ConstFunction({0!r})'.format(self.__k)
 
 
 class IdentityFunction(Function):
@@ -75,7 +75,7 @@ class SumFunction(Function):
         return '({0} + {1})'.format(self.__f, self.__g)
 
     def __repr__(self):
-        return 'SumFunction({0}, {1})'.format(repr(self.__f), repr(self.__g))
+        return 'SumFunction({0!r}, {1!r})'.format(self.__f, self.__g)
 
 
 class ProductFunction(Function):
@@ -96,8 +96,7 @@ class ProductFunction(Function):
         return '({0} * {1})'.format(self.__f, self.__g)
 
     def __repr__(self):
-        return 'ProductFunction({0}, {1})'.format(
-            repr(self.__f), repr(self.__g))
+        return 'ProductFunction({0!r}, {1!r})'.format(self.__f, self.__g)
 
 
 class QuotientFunction(Function):
@@ -124,8 +123,7 @@ class QuotientFunction(Function):
         return '({0} / {1})'.format(self.__f, self.__g)
 
     def __repr__(self):
-        return 'QuotientFunction({0}, {1})'.format(
-            repr(self.__f), repr(self.__g))
+        return 'QuotientFunction({0!r}, {1!r})'.format(self.__f, self.__g)
 
 
 class PowerFunction(Function):
@@ -146,7 +144,7 @@ class PowerFunction(Function):
         return '({0} ** {1})'.format(self.__f, self.__g)
 
     def __repr__(self):
-        return 'PowerFunction({0}, {1})'.format(repr(self.__f), repr(self.__g))
+        return 'PowerFunction({0!r}, {1!r})'.format(self.__f, self.__g)
 
 
 class _FunctionUnitTests(unittest.TestCase):
