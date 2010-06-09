@@ -26,6 +26,9 @@ class Function(object):
 
 class ConstFunction(Function):
     def __init__(self, k):
+        # A ConstFunction can't be initialized using an interval--it
+        # is intended to represent a single constant value.
+        assert not isinstance(k, Interval)
         self.__k = k
 
     def __call__(self, param):
@@ -152,6 +155,16 @@ class _FunctionUnitTests(unittest.TestCase):
             for q in xrange(-2, 3):
                 yield Interval(p, q)
 
+    @staticmethod
+    def interval_function(i):
+        """Create a function which, when evaluated over the interval
+        [0, 1], takes on values in the interval i."""
+        assert isinstance(i, Interval)
+        return SumFunction(
+            ProductFunction(ConstFunction(i.right - i.left),
+                            IdentityFunction()),
+            ConstFunction(i.left))
+
     def numericalDerivativeTest(self, f):
         h = 1e-6
         tol = 1e-4
@@ -205,8 +218,8 @@ class _FunctionUnitTests(unittest.TestCase):
                                                      IdentityFunction())(val))
         for i in self.intervals():
             for j in self.intervals():
-                self.assertEqual(i*j, ProductFunction(ConstFunction(i),
-                                                      ConstFunction(j))(0))
+                self.assertEqual(i*j, ProductFunction(self.interval_function(i),
+                                                      self.interval_function(j))(Interval(0, 1)))
         self.assertEqual(str(ProductFunction(ConstFunction(1),
                                              ConstFunction(2))),
                          '(1 * 2)')
