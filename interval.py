@@ -1,5 +1,5 @@
 from __future__ import division
-from math import floor
+from math import floor, log
 import unittest
 
 class Interval(object):
@@ -129,7 +129,14 @@ class Interval(object):
         if not isinstance(other, Interval):
             other = Interval(other)
         return other.__pow__(self)
-        
+
+    def log(self):
+        """Compute the natural log of the interval."""
+        if self.left <= 0:
+            # ln(x) is undefined iff x <= 0
+            raise ValueError
+        return Interval(log(self.left), log(self.right))
+
 
 class intervalTest(unittest.TestCase):
     def pos_intervals(self):
@@ -185,6 +192,13 @@ class intervalTest(unittest.TestCase):
         self.assertEqual(Interval(2,4).reciprocal(), Interval(.5, .25))
         self.assertEqual(Interval(-4,-8).reciprocal(), Interval(-.25, -.125))
         self.assertRaises(ValueError, Interval(-1, 1).reciprocal)
+
+    def test_log(self):
+        self.assertEqual(Interval(2,4).log(), Interval(log(2), log(4)))
+        self.assertEqual(Interval(1,4).log(), Interval(0.0, log(4)))
+        self.assertRaises(ValueError, Interval(0, 1).log)
+        self.assertRaises(ValueError, Interval(-1, 1).log)
+        self.assertRaises(ValueError, Interval(-2, -1).log)
 
     def test_ops(self):
         # unary ops
