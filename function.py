@@ -4,6 +4,9 @@ from interval import Interval
 import unittest
 
 
+_simplify = False
+
+
 class Function(object):
     __metaclass__ = abc.ABCMeta
 
@@ -32,13 +35,31 @@ class Function(object):
         return _IdentityFunction()
 
     def __add__(self, g):
-        if not isinstance(g, Function):
-            return NotImplemented
+        if _simplify:
+            if not isinstance(g, Function):
+                return NotImplemented
+            if isinstance(self, _ConstFunction) and self._k == 0:
+                return g
+            if isinstance(g, _ConstFunction) and g._k == 0:
+                return self
+            if isinstance(self, _ConstFunction) and isinstance(g, _ConstFunction):
+                return _ConstFunction(self._k + g._k)
         return _SumFunction(self, g)
 
     def __mul__(self, g):
-        if not isinstance(g, Function):
-            return NotImplemented
+        if _simplify:
+            if not isinstance(g, Function):
+                return NotImplemented
+            if isinstance(self, _ConstFunction) and self._k == 0:
+                return self
+            if isinstance(g, _ConstFunction) and g._k == 0:
+                return g
+            if isinstance(self, _ConstFunction) and self._k == 1:
+                return g
+            if isinstance(g, _ConstFunction) and g._k == 1:
+                return self
+            if isinstance(self, _ConstFunction) and isinstance(g, _ConstFunction):
+                return _ConstFunction(self._k * g._k)
         return _ProductFunction(self, g)
 
     def __truediv__(self, g):
@@ -57,19 +78,19 @@ class _ConstFunction(Function):
         # A ConstFunction can't be initialized using an interval--it
         # is intended to represent a single constant value.
         assert not isinstance(k, Interval)
-        self.__k = k
+        self._k = k
 
     def __call__(self, param):
-        return self.__k
+        return self._k
 
     def derivative(self):
         return self.constant(0)
 
     def __str__(self):
-        return str(self.__k)
+        return str(self._k)
 
     def __repr__(self):
-        return 'Function.constant({0})'.format(repr(self.__k))
+        return 'Function.constant({0})'.format(repr(self._k))
 
 
 class _IdentityFunction(Function):
@@ -296,4 +317,19 @@ class _FunctionUnitTests(unittest.TestCase):
 
 
 if __name__ == '__main__':
+    f=Function.constant(1)/Function.identity()
+    print "f =", f
+    print "-----"
+    print "No simplification:"
+    print "f' =", f.derivative()
+    print "f'' =", f.derivative().derivative()
+    print "f''' =", f.derivative().derivative().derivative()
+    print "-----"
+    _simplify = True
+    print "Some simplification:"
+    print "f' =", f.derivative()
+    print "f'' =", f.derivative().derivative()
+    print "f''' =", f.derivative().derivative().derivative()
+    print "-----"
+    print "Unit tests fail with simplification turned on:"
     unittest.main()
