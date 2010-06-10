@@ -37,6 +37,9 @@ class Interval(object):
         else:
             return NotImplemented
 
+    def __ne__(self, other):
+        return not (self == other)
+
     def __str__(self):
         return '[{0}, {1}]'.format(self.left, self.right)
 
@@ -163,6 +166,7 @@ class intervalTest(unittest.TestCase):
                       )
         for a, b, expected_result in test_cases:
             self.assertEqual(a == b, expected_result, '({0} == {1}) != {2}'.format(a, b, expected_result))
+            self.assertEqual(a != b, not expected_result, '({0} != {1}) != {2}'.format(a, b, not expected_result))
 
     def pos_intervals(self):
         for p in xrange(0, 8):
