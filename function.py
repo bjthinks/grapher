@@ -48,10 +48,6 @@ class Function(object):
     def product(f, g):
         if not (isinstance(f, Function) and isinstance(g, Function)):
             raise ValueError
-        # We need to export __k from _ConstFunction
-        # One way to do so is by evaluating it
-        # Another way is to make a property
-        # A third (and worst) way is to change __k to _k
         if isinstance(f, _ConstFunction) and f._k == 0:
             return f
         if isinstance(g, _ConstFunction) and g._k == 0:
