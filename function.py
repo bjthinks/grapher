@@ -72,6 +72,15 @@ class Function(object):
     def power(f, g):
         if not (isinstance(f, Function) and isinstance(g, Function)):
             raise ValueError
+        if isinstance(f, _ConstantFunction) and \
+                isinstance(g, _ConstantFunction):
+            return Function.constant(f._k ** g._k)
+        if isinstance(g, _ConstantFunction) and g._k == 0:
+            return Function.constant(1)
+        if isinstance(f, _ConstantFunction) and f._k == 1:
+            return Function.constant(1)
+        if isinstance(g, _ConstantFunction) and g._k == 1:
+            return f
         return _PowerFunction(f, g)
 
     @staticmethod
@@ -173,8 +182,8 @@ class _QuotientFunction(Function):
                 Function.product(Function.constant(-1),
                                  Function.product(self.__f,
                                                   self.__g.derivative()))),
-                                 # this part should use _PowerFunction
-                                 Function.product(self.__g, self.__g))
+                                 Function.power(self.__g,
+                                                Function.constant(2)))
 
     def __str__(self):
         return '({0} / {1})'.format(self.__f, self.__g)
