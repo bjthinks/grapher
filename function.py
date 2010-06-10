@@ -1,7 +1,7 @@
 from __future__ import division
 import abc
 from interval import Interval
-from math import log
+from math import log, floor
 import unittest
 
 
@@ -81,6 +81,12 @@ class Function(object):
             return Function.constant(1)
         if isinstance(g, _ConstantFunction) and g._k == 1:
             return f
+        # This is very specific, but we think it will occur lots
+        if isinstance(g, _ConstantFunction) and g._k == floor(g._k) and \
+                isinstance(f, _PowerFunction) and \
+                isinstance(f._g, _ConstantFunction) and \
+                f._g._k == floor(f._g._k):
+            return Function.power(f._f, Function.constant(f._g._k * g._k))
         return _PowerFunction(f, g)
 
     @staticmethod
@@ -196,28 +202,27 @@ class _PowerFunction(Function):
     def __init__(self, f, g):
         assert isinstance(f, Function)
         assert isinstance(g, Function)
-        self.__f = f
-        self.__g = g
+        self._f = f
+        self._g = g
 
     def __call__(self, param):
-        return self.__f(param) ** self.__g(param)
+        return self._f(param) ** self._g(param)
 
     def derivative(self):
         # f(x) ** g(x) * Dg(x) * log(f(x)) + f(x) ** (g(x) - 1) * g(x) * Df(x)
         return Function.sum(
             Function.product(self,
-                             Function.product(self.__g.derivative(),
-                                              Function.log(self.__f))),
-            Function.product(Function.power(self.__f,
-                                            Function.sum(self.__g,
-                                                         Function.constant(-1))),
-                             Function.product(self.__g, self.__f.derivative())))
+                             Function.product(self._g.derivative(),
+                                              Function.log(self._f))),
+            Function.product(Function.power(
+                    self._f, Function.sum(self._g, Function.constant(-1))),
+                             Function.product(self._g, self._f.derivative())))
     
     def __str__(self):
-        return '({0} ** {1})'.format(self.__f, self.__g)
+        return '({0} ** {1})'.format(self._f, self._g)
 
     def __repr__(self):
-        return 'Function.power({0!r}, {1!r})'.format(self.__f, self.__g)
+        return 'Function.power({0!r}, {1!r})'.format(self._f, self._g)
 
 
 class _LogFunction(Function):
@@ -370,12 +375,12 @@ class _FunctionUnitTests(unittest.TestCase):
                 continue
             self.assertEqual(expected, Function.power(Function.identity(),
                                                       Function.identity())(i))
-        self.assertEqual(str(Function.power(Function.constant(1),
+        self.assertEqual(str(Function.power(Function.identity(),
                                             Function.constant(2))),
-                         '(1 ** 2)')
-        self.assertEqual(repr(Function.power(Function.constant(1),
+                         '(x ** 2)')
+        self.assertEqual(repr(Function.power(Function.identity(),
                                              Function.constant(2))),
-                         'Function.power(Function.constant(1), ' +
+                         'Function.power(Function.identity(), ' +
                          'Function.constant(2))')
         for v in [2, 3, 4, 5, 6.666]:
             self.numericalDerivativeTest(Function.power(
