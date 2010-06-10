@@ -26,7 +26,7 @@ class Function(object):
 
     @staticmethod
     def constant(k):
-        return _ConstFunction(k)
+        return _ConstantFunction(k)
 
     @staticmethod
     def identity():
@@ -36,28 +36,30 @@ class Function(object):
     def sum(f, g):
         if not (isinstance(f, Function) and isinstance(g, Function)):
             raise ValueError
-        if isinstance(f, _ConstFunction) and f._k == 0:
+        if isinstance(f, _ConstantFunction) and f._k == 0:
             return g
-        if isinstance(g, _ConstFunction) and g._k == 0:
+        if isinstance(g, _ConstantFunction) and g._k == 0:
             return f
-        if isinstance(f, _ConstFunction) and isinstance(g, _ConstFunction):
-            return _ConstFunction(f._k + g._k)
+        if isinstance(f, _ConstantFunction) and \
+                isinstance(g, _ConstantFunction):
+            return _ConstantFunction(f._k + g._k)
         return _SumFunction(f, g)
 
     @staticmethod
     def product(f, g):
         if not (isinstance(f, Function) and isinstance(g, Function)):
             raise ValueError
-        if isinstance(f, _ConstFunction) and f._k == 0:
+        if isinstance(f, _ConstantFunction) and f._k == 0:
             return f
-        if isinstance(g, _ConstFunction) and g._k == 0:
+        if isinstance(g, _ConstantFunction) and g._k == 0:
             return g
-        if isinstance(f, _ConstFunction) and f._k == 1:
+        if isinstance(f, _ConstantFunction) and f._k == 1:
             return g
-        if isinstance(g, _ConstFunction) and g._k == 1:
+        if isinstance(g, _ConstantFunction) and g._k == 1:
             return f
-        if isinstance(f, _ConstFunction) and isinstance(g, _ConstFunction):
-            return _ConstFunction(f._k * g._k)
+        if isinstance(f, _ConstantFunction) and \
+                isinstance(g, _ConstantFunction):
+            return _ConstantFunction(f._k * g._k)
         return _ProductFunction(f, g)
 
     @staticmethod
@@ -76,12 +78,12 @@ class Function(object):
     def log(f):
         if not isinstance(f, Function):
             raise ValueError
-        return _NaturalLogFunction(f)
+        return _LogFunction(f)
 
 
-class _ConstFunction(Function):
+class _ConstantFunction(Function):
     def __init__(self, k):
-        # A ConstFunction can't be initialized using an interval--it
+        # A ConstantFunction can't be initialized using an interval--it
         # is intended to represent a single constant value.
         assert not isinstance(k, Interval)
         self._k = k
@@ -196,7 +198,7 @@ class _PowerFunction(Function):
         return Function.sum(
             Function.product(self,
                              Function.product(self.__g.derivative(),
-                                              _NaturalLogFunction(self.__f))),
+                                              Function.log(self.__f))),
             Function.product(Function.power(self.__f,
                                             Function.sum(self.__g,
                                                          Function.constant(-1))),
@@ -209,7 +211,7 @@ class _PowerFunction(Function):
         return 'Function.power({0!r}, {1!r})'.format(self.__f, self.__g)
 
 
-class _NaturalLogFunction(Function):
+class _LogFunction(Function):
     def __init__(self, f):
         assert isinstance(f, Function)
         self.__f = f
@@ -390,24 +392,24 @@ class _FunctionUnitTests(unittest.TestCase):
     def test_natural_log(self):
         for val in xrange(1, 5):
             self.assertEqual(log(val),
-                             _NaturalLogFunction(Function.identity())(val))
+                             Function.log(Function.identity())(val))
         for i in self.intervals():
             try:
                 expected = i.log()
             except ValueError:
                 continue
             self.assertEqual(expected,
-                             _NaturalLogFunction(Function.identity())(i))
-        self.assertEqual(str(_NaturalLogFunction(Function.constant(5))),
+                             Function.log(Function.identity())(i))
+        self.assertEqual(str(Function.log(Function.constant(5))),
                          'ln(5)')
-        self.assertEqual(repr(_NaturalLogFunction(Function.constant(5))),
+        self.assertEqual(repr(Function.log(Function.constant(5))),
                          'Function.log(Function.constant(5))')
-        self.numericalDerivativeTest(_NaturalLogFunction(Function.identity()))
+        self.numericalDerivativeTest(Function.log(Function.identity()))
         self.numericalDerivativeTest(
-            _NaturalLogFunction(
+            Function.log(
                 Function.sum(Function.identity(), Function.constant(1))))
         self.numericalDerivativeTest(
-            _NaturalLogFunction(
+            Function.log(
                 Function.product(Function.identity(), Function.constant(2))))
 
 
