@@ -36,12 +36,12 @@ class Function(object):
     def sum(f, g):
         if not (isinstance(f, Function) and isinstance(g, Function)):
             raise ValueError
-        #if isinstance(f, _ConstFunction) and f._k == 0:
-        #    return g
-        #if isinstance(g, _ConstFunction) and g._k == 0:
-        #    return f
-        #if isinstance(f, _ConstFunction) and isinstance(g, _ConstFunction):
-        #    return _ConstFunction(f._k + g._k)
+        if isinstance(f, _ConstFunction) and f._k == 0:
+            return g
+        if isinstance(g, _ConstFunction) and g._k == 0:
+            return f
+        if isinstance(f, _ConstFunction) and isinstance(g, _ConstFunction):
+            return _ConstFunction(f._k + g._k)
         return _SumFunction(f, g)
 
     @staticmethod
@@ -52,17 +52,16 @@ class Function(object):
         # One way to do so is by evaluating it
         # Another way is to make a property
         # A third (and worst) way is to change __k to _k
-        #
-        #if isinstance(f, _ConstFunction) and f._k == 0:
-        #    return f
-        #if isinstance(g, _ConstFunction) and g._k == 0:
-        #    return g
-        #if isinstance(f, _ConstFunction) and f._k == 1:
-        #    return g
-        #if isinstance(g, _ConstFunction) and g._k == 1:
-        #    return f
-        #if isinstance(f, _ConstFunction) and isinstance(g, _ConstFunction):
-        #    return _ConstFunction(f._k * g._k)
+        if isinstance(f, _ConstFunction) and f._k == 0:
+            return f
+        if isinstance(g, _ConstFunction) and g._k == 0:
+            return g
+        if isinstance(f, _ConstFunction) and f._k == 1:
+            return g
+        if isinstance(g, _ConstFunction) and g._k == 1:
+            return f
+        if isinstance(f, _ConstFunction) and isinstance(g, _ConstFunction):
+            return _ConstFunction(f._k * g._k)
         return _ProductFunction(f, g)
 
     @staticmethod
@@ -83,19 +82,19 @@ class _ConstFunction(Function):
         # A ConstFunction can't be initialized using an interval--it
         # is intended to represent a single constant value.
         assert not isinstance(k, Interval)
-        self.__k = k
+        self._k = k
 
     def __call__(self, param):
-        return self.__k
+        return self._k
 
     def derivative(self):
         return self.constant(0)
 
     def __str__(self):
-        return str(self.__k)
+        return str(self._k)
 
     def __repr__(self):
-        return 'Function.constant({0!r})'.format(self.__k)
+        return 'Function.constant({0!r})'.format(self._k)
 
 
 class _IdentityFunction(Function):
@@ -285,12 +284,12 @@ class _FunctionUnitTests(unittest.TestCase):
                 sum_func = Function.sum(self.interval_function(i),
                                         self.interval_function(j))
                 self.assertEqual(i+j, sum_func(Interval(0, 1)))
-        self.assertEqual(str(Function.sum(Function.constant(1),
+        self.assertEqual(str(Function.sum(Function.identity(),
                                           Function.constant(2))),
-                         '(1 + 2)')
-        self.assertEqual(repr(Function.sum(Function.constant(1),
+                         '(x + 2)')
+        self.assertEqual(repr(Function.sum(Function.identity(),
                                            Function.constant(2))),
-                         'Function.sum(Function.constant(1), ' +
+                         'Function.sum(Function.identity(), ' +
                          'Function.constant(2))')
         self.assertEqual(Function.sum(Function.identity(),
                                       Function.constant(5)).derivative()(8), 1)
@@ -309,12 +308,12 @@ class _FunctionUnitTests(unittest.TestCase):
                                  Function.product(self.interval_function(i),
                                                   self.interval_function(j))
                                  (Interval(0, 1)))
-        self.assertEqual(str(Function.product(Function.constant(1),
+        self.assertEqual(str(Function.product(Function.identity(),
                                               Function.constant(2))),
-                         '(1 * 2)')
-        self.assertEqual(repr(Function.product(Function.constant(1),
+                         '(x * 2)')
+        self.assertEqual(repr(Function.product(Function.identity(),
                                                Function.constant(2))),
-                         'Function.product(Function.constant(1), ' +
+                         'Function.product(Function.identity(), ' +
                          'Function.constant(2))')
         self.assertEqual(Function.product(
                 Function.identity(), Function.constant(4)).derivative()(7), 4)

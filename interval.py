@@ -30,8 +30,12 @@ class Interval(object):
         return (self.__left, self.__right)
 
     def __eq__(self, other):
-        return isinstance(other, Interval) and self.left == other.left \
-            and self.right == other.right
+        if isinstance(other, Interval):
+            return self.left == other.left and self.right == other.right
+        elif self.__left == self.__right:
+            return self.__left == other
+        else:
+            return NotImplemented
 
     def __str__(self):
         return '[{0}, {1}]'.format(self.left, self.right)
@@ -139,6 +143,27 @@ class Interval(object):
 
 
 class intervalTest(unittest.TestCase):
+    def test_eq(self):
+        test_cases = ((Interval(1, 2), Interval(1, 2), True),
+                      (Interval(2, 1), Interval(1, 2), True),
+                      (Interval(1, 3), Interval(1, 2), False),
+                      (Interval(0, 2), Interval(1, 2), False),
+                      (Interval(1, 2), 1, False),
+                      (Interval(1, 2), 2, False),
+                      (Interval(1, 1), 1, True),
+                      (Interval(1, 1), 2, False),
+                      (1, Interval(1, 2), False),
+                      (2, Interval(1, 2), False),
+                      (1, Interval(1, 1), True),
+                      (2, Interval(1, 1), False),
+                      (Interval(1, 2), 'x', False),
+                      (Interval(1, 1), 'x', False),
+                      ('x', Interval(1, 2), False),
+                      ('x', Interval(1, 1), False),
+                      )
+        for a, b, expected_result in test_cases:
+            self.assertEqual(a == b, expected_result, '({0} == {1}) != {2}'.format(a, b, expected_result))
+
     def pos_intervals(self):
         for p in xrange(0, 8):
             for q in xrange(0, 8):
