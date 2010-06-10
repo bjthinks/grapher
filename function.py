@@ -86,7 +86,7 @@ class Function(object):
                 isinstance(f, _PowerFunction) and \
                 isinstance(f._g, _ConstantFunction) and \
                 f._g._k == floor(f._g._k) and \
-                g._k >= 0 and f._g._k >= 0:
+                not (g._k < 0 and f._g._k < 0):
             return Function.power(f._f, Function.constant(f._g._k * g._k))
         return _PowerFunction(f, g)
 
