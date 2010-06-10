@@ -76,6 +76,12 @@ class Function(object):
             raise ValueError
         return _PowerFunction(f, g)
 
+    @staticmethod
+    def log(f):
+        if not isinstance(f, Function):
+            raise ValueError
+        return _NaturalLogFunction(f)
+
 
 class _ConstFunction(Function):
     def __init__(self, k):
@@ -194,7 +200,7 @@ class _PowerFunction(Function):
         return Function.sum(
             Function.product(self,
                              Function.product(self.__g.derivative(),
-                                              NaturalLogFunction(self.__f))),
+                                              _NaturalLogFunction(self.__f))),
             Function.product(Function.power(self.__f,
                                             Function.sum(self.__g,
                                                          Function.constant(-1))),
@@ -207,7 +213,7 @@ class _PowerFunction(Function):
         return 'Function.power({0!r}, {1!r})'.format(self.__f, self.__g)
 
 
-class NaturalLogFunction(Function):
+class _NaturalLogFunction(Function):
     def __init__(self, f):
         assert isinstance(f, Function)
         self.__f = f
@@ -227,7 +233,7 @@ class NaturalLogFunction(Function):
         return 'ln({0})'.format(self.__f)
 
     def __repr__(self):
-        return 'NaturalLogFunction({0})'.format(repr(self.__f))
+        return 'Function.log({0})'.format(repr(self.__f))
 
 
 class _FunctionUnitTests(unittest.TestCase):
@@ -388,24 +394,24 @@ class _FunctionUnitTests(unittest.TestCase):
     def test_natural_log(self):
         for val in xrange(1, 5):
             self.assertEqual(log(val),
-                             NaturalLogFunction(Function.identity())(val))
+                             _NaturalLogFunction(Function.identity())(val))
         for i in self.intervals():
             try:
                 expected = i.log()
             except ValueError:
                 continue
             self.assertEqual(expected,
-                             NaturalLogFunction(Function.identity())(i))
-        self.assertEqual(str(NaturalLogFunction(Function.constant(5))),
+                             _NaturalLogFunction(Function.identity())(i))
+        self.assertEqual(str(_NaturalLogFunction(Function.constant(5))),
                          'ln(5)')
-        self.assertEqual(repr(NaturalLogFunction(Function.constant(5))),
-                         'NaturalLogFunction(Function.constant(5))')
-        self.numericalDerivativeTest(NaturalLogFunction(Function.identity()))
+        self.assertEqual(repr(_NaturalLogFunction(Function.constant(5))),
+                         'Function.log(Function.constant(5))')
+        self.numericalDerivativeTest(_NaturalLogFunction(Function.identity()))
         self.numericalDerivativeTest(
-            NaturalLogFunction(
+            _NaturalLogFunction(
                 Function.sum(Function.identity(), Function.constant(1))))
         self.numericalDerivativeTest(
-            NaturalLogFunction(
+            _NaturalLogFunction(
                 Function.product(Function.identity(), Function.constant(2))))
 
 
