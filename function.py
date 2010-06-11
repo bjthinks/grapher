@@ -340,6 +340,19 @@ class _FunctionUnitTests(unittest.TestCase):
                                                       Function.identity()))
         self.numericalDerivativeTest(Function.product(Function.identity(),
                                                       Function.constant(5)))
+        # Simplifications:
+        c = Function.constant
+        x = Function.identity()
+        # x*0 = 0
+        self.assertEqual(str(Function.product(x, c(0))), '0')
+        # 0*x = 0
+        self.assertEqual(str(Function.product(c(0), x)), '0')
+        # x*1 = x
+        self.assertEqual(str(Function.product(x, c(1))), 'x')
+        # 1*x = x
+        self.assertEqual(str(Function.product(c(1), x)), 'x')
+        # const*const = const
+        self.assertEqual(str(Function.product(c(2), c(3))), '6')
 
     def test_quotient(self):
         for v in xrange(5):
