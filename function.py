@@ -361,6 +361,18 @@ class _FunctionUnitTests(unittest.TestCase):
                                                        Function.identity()))
         self.numericalDerivativeTest(Function.quotient(Function.identity(),
                                                        Function.constant(5)))
+        # Test the derivative formula on (x^2+1)/(x^3+1)
+        x = Function.identity()
+        c = Function.constant
+        plus = Function.sum
+        pow = Function.power
+        f = Function.quotient(plus(pow(x, c(2)), c(1)),
+                              plus(pow(x, c(3)), c(1)))
+        self.assertEqual(
+            str(f.derivative()),
+            '((((x * 2) * ((x ** 3) + 1))'
+            ' + (-1 * (((x ** 2) + 1) * ((x ** 2) * 3))))'
+            ' / (((x ** 3) + 1) ** 2))')
 
     def test_power(self):
         for val in xrange(5):
@@ -402,7 +414,29 @@ class _FunctionUnitTests(unittest.TestCase):
                                              Function.constant(7)))
         g = Function.sum(g, Function.constant(2))
         self.numericalDerivativeTest(Function.power(f, g))
-                                        
+        # Simplifications:
+        c = Function.constant
+        x = Function.identity()
+        # const^const = const
+        self.assertEqual(str(Function.power(c(2), c(3))), '8')
+        # x^0 = 1
+        self.assertEqual(str(Function.power(x, c(0))), '1')
+        # 1^x = 1
+        self.assertEqual(str(Function.power(c(1), x)), '1')
+        # x^1 = x
+        self.assertEqual(str(Function.power(x, c(1))), 'x')
+        # (x^2)^3 = x^6
+        self.assertEqual(str(Function.power(Function.power(x, c(2)), c(3))),
+                         '(x ** 6)')
+        # (x^-2)^3 = x^-6
+        self.assertEqual(str(Function.power(Function.power(x, c(-2)), c(3))),
+                         '(x ** -6)')
+        # (x^2)^-3 = x^-6
+        self.assertEqual(str(Function.power(Function.power(x, c(2)), c(-3))),
+                         '(x ** -6)')
+        # (x^-2)^-3 should not simplify because this would change the domain.
+        self.assertEqual(str(Function.power(Function.power(x, c(-2)), c(-3))),
+                         '((x ** -2) ** -3)')
 
     def test_natural_log(self):
         for val in xrange(1, 5):
