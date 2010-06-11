@@ -9,7 +9,7 @@ for f in fs:
         deriv_name = 'f' + "'"*n
         deriv = f
         for i in xrange(n):
-            deriv = deriv.derivative()
+            deriv = deriv.derivative().weak_simplify()
         print '{0} = {1}'.format(deriv_name, deriv)
         interval = Interval(1, 2)
         print '{0}({1}) = {2}'.format(deriv_name, interval, deriv(interval))
