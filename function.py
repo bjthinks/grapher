@@ -1,6 +1,7 @@
 from __future__ import division
 import abc
 from interval import Interval
+import math
 from math import log, floor
 import unittest
 
@@ -39,17 +40,32 @@ class Function(object):
         return _IdentityFunction()
 
     @staticmethod
-    def sum(f, g):
-        if not (isinstance(f, Function) and isinstance(g, Function)):
+    def sum(*args):
+        if not all(isinstance(f, Function) for f in args):
             raise ValueError
-        if isinstance(f, _ConstantFunction) and f._k == 0:
-            return g
-        if isinstance(g, _ConstantFunction) and g._k == 0:
-            return f
-        if isinstance(f, _ConstantFunction) and \
-                isinstance(g, _ConstantFunction):
-            return _ConstantFunction(f._k + g._k)
-        return _SumFunction(f, g)
+        # Expand any args that are _SumFunctions into their terms.
+        expanded_args = []
+        for f in args:
+            if isinstance(f, _SumFunction):
+                expanded_args.extend(f._terms)
+            else:
+                expanded_args.append(f)
+        # Collect constants
+        const_term = 0
+        other_terms = []
+        for f in expanded_args:
+            if isinstance(f, _ConstantFunction):
+                const_term += f._k
+            else:
+                other_terms.append(f)
+        # Do other simplifications
+        if len(other_terms) == 0:
+            return _ConstantFunction(const_term)
+        if const_term != 0:
+            other_terms.insert(0, _ConstantFunction(const_term))
+        if len(other_terms) == 1:
+            return other_terms[0]
+        return _SumFunction(tuple(other_terms))
 
     @staticmethod
     def product(f, g):
@@ -136,28 +152,27 @@ class _IdentityFunction(Function):
 
 
 class _SumFunction(Function):
-    def __init__(self, f, g):
-        assert isinstance(f, Function)
-        assert isinstance(g, Function)
-        self.__f = f
-        self.__g = g
+    def __init__(self, terms):
+        assert isinstance(terms, tuple)
+        assert len(terms) >= 2
+        assert all(isinstance(f, Function) for f in terms)
+        self._terms = terms
 
     def __call__(self, param):
-        return self.__f(param) + self.__g(param)
+        return sum(f(param) for f in self._terms)
 
     def derivative(self):
-        return Function.sum(self.__f.derivative(), self.__g.derivative())
+        return Function.sum(*[f.derivative() for f in self._terms])
 
     def weak_simplify(self):
-        f = self.__f.weak_simplify()
-        g = self.__g.weak_simplify()
-        return Function.sum(f, g)
+        return Function.sum(*[f.weak_simplify() for f in self._terms])
 
     def __str__(self):
-        return '({0} + {1})'.format(self.__f, self.__g)
+        return '({0})'.format(' + '.join(str(f) for f in self._terms))
 
     def __repr__(self):
-        return 'Function.sum({0!r}, {1!r})'.format(self.__f, self.__g)
+        return 'Function.sum({0})'.format(
+            ', '.join(repr(f) for f in self._terms))
 
 
 class _ProductFunction(Function):
@@ -343,27 +358,45 @@ class _FunctionUnitTests(unittest.TestCase):
                 self.assertEqual(i+j, sum_func(Interval(0, 1)))
         self.assertEqual(str(Function.sum(Function.identity(),
                                           Function.constant(2))),
-                         '(x + 2)')
+                         '(2 + x)')
         self.assertEqual(repr(Function.sum(Function.identity(),
                                            Function.constant(2))),
-                         'Function.sum(Function.identity(), ' +
-                         'Function.constant(2))')
+                         'Function.sum(Function.constant(2), ' +
+                         'Function.identity())')
         self.assertEqual(Function.sum(Function.identity(),
                                       Function.constant(5)).derivative()(8), 1)
         self.numericalDerivativeTest(Function.sum(Function.identity(),
                                                   Function.identity()))
         self.numericalDerivativeTest(Function.sum(Function.identity(),
                                                   Function.constant(5)))
-        # Simplifications
         c = Function.constant
         x = Function.identity()
         prod = Function.product
+        log = Function.log
+        # Variable argument count
+        self.assertEqual(str(Function.sum()), '0')
+        self.assertEqual(str(Function.sum(c(3))), '3')
+        self.assertEqual(str(Function.sum(x)), 'x')
+        f = Function.sum(c(3), x, log(x))
+        self.assertEqual(str(f), '(3 + x + ln(x))')
+        self.assertEqual(repr(f),
+                         'Function.sum(Function.constant(3), '
+                         'Function.identity(), '
+                         'Function.log(Function.identity()))')
+        self.assertEqual(f(2), 3 + 2 + math.log(2))
+        self.numericalDerivativeTest(f)
+        # Simplifications
         # 0*x + 2 = 2
         self.assertEqual(
             str(Function.sum(prod(c(0), x), c(2)).weak_simplify()), '2')
         # 2 + 0*x = 2
         self.assertEqual(
             str(Function.sum(c(2), prod(c(0), x)).weak_simplify()), '2')
+        # 2 + 3 = 5
+        self.assertEqual(str(Function.sum(c(2), c(3))), '5')
+        # (x + 1) + 1 = 2 + x
+        self.assertEqual(str(Function.sum(Function.sum(x, c(1)), c(1))),
+                         '(2 + x)')
 
     def test_product(self):
         for val in xrange(5):
@@ -442,9 +475,9 @@ class _FunctionUnitTests(unittest.TestCase):
                               plus(pow(x, c(3)), c(1)))
         self.assertEqual(
             str(f.derivative().weak_simplify()),
-            '((((x * 2) * ((x ** 3) + 1))'
-            ' + (-1 * (((x ** 2) + 1) * ((x ** 2) * 3))))'
-            ' / (((x ** 3) + 1) ** 2))')
+            '((((x * 2) * (1 + (x ** 3)))'
+            ' + (-1 * ((1 + (x ** 2)) * ((x ** 2) * 3))))'
+            ' / ((1 + (x ** 3)) ** 2))')
         # Simplifications
         # (1 + x*0)/(2*x) = 1/(2*x)
         f = Function.quotient(plus(c(1), prod(x, c(0))), prod(c(2), x))
