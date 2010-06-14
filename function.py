@@ -32,6 +32,12 @@ class Function(object):
         pass
 
     @staticmethod
+    def error():
+        """Create a Function object representing an error condition.
+        The resulting function will raise a ValueError when evaluated."""
+        return _ErrorFunction()
+
+    @staticmethod
     def constant(k):
         return _ConstantFunction(k)
 
@@ -107,7 +113,10 @@ class Function(object):
             raise ValueError
         if isinstance(f, _ConstantFunction) and \
                 isinstance(g, _ConstantFunction):
-            return Function.constant(f._k ** g._k)
+            try:
+                return Function.constant(f._k ** g._k)
+            except (ValueError, ZeroDivisionError):
+                return Function.error()
         if isinstance(g, _ConstantFunction) and g._k == 1:
             return f
         # This is very specific, but we think it will occur lots
@@ -124,6 +133,23 @@ class Function(object):
         if not isinstance(f, Function):
             raise ValueError
         return _LogFunction(f)
+
+
+class _ErrorFunction(Function):
+    def __call__(self, param):
+        raise ValueError
+
+    def derivative(self):
+        return self
+
+    def weak_simplify(self):
+        return self
+
+    def __str__(self):
+        return '<error>'
+
+    def __repr__(self):
+        return 'Function.error()'
 
 
 class _ConstantFunction(Function):
@@ -349,6 +375,14 @@ class _FunctionUnitTests(unittest.TestCase):
             v2 = (f(x+h/2) - f(x-h/2)) / h
             # We want v1 and v2 to be within tol of each other
             self.assertTrue(abs(v1-v2) / abs(v1+v2) < tol)
+
+    def test_error(self):
+        f = Function.error()
+        self.assertTrue(isinstance(f, _ErrorFunction))
+        self.assertRaises(ValueError, f, 0)
+        self.assertTrue(isinstance(f.derivative(), _ErrorFunction))
+        self.assertEqual(str(f), '<error>')
+        self.assertEqual(repr(f), 'Function.error()')
 
     def test_const(self):
         for val in xrange(5):
@@ -595,6 +629,23 @@ class _FunctionUnitTests(unittest.TestCase):
         # (2 + 0*x)^3 = 8
         f = Function.power(sum(c(2), prod(c(0), x)), c(3))
         self.assertEqual(str(f.weak_simplify()), '8')
+
+    def test_power_consts(self):
+        # Test that power operates correctly when raising a const to a
+        # const, especically in the presence of exceptions.
+        values = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
+        for x in values:
+            for y in values:
+                try:
+                    z = x ** y
+                except (ValueError, ZeroDivisionError):
+                    z = None
+                f = Function.power(Function.constant(x), Function.constant(y))
+                if z is None:
+                    self.assertTrue(isinstance(f, _ErrorFunction))
+                else:
+                    self.assertTrue(isinstance(f, _ConstantFunction))
+                    self.assertEqual(f._k, z)
 
     def test_natural_log(self):
         for val in xrange(1, 5):
