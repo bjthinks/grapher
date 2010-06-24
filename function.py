@@ -248,7 +248,7 @@ class _PowerFunction(Function):
         if isinstance(g, _ConstantFunction) and g._k == 0:
             return Function.constant(1)
         if isinstance(f, _ConstantFunction) and f._k == 1:
-            return Function.constant(1)
+            return f
         return Function.power(f, g)
 
     def __str__(self):
