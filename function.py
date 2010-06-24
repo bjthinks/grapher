@@ -1,6 +1,7 @@
 from __future__ import division
 import abc
 from interval import Interval
+import math
 from math import log, floor
 import unittest
 
@@ -31,6 +32,12 @@ class Function(object):
         pass
 
     @staticmethod
+    def error():
+        """Create a Function object representing an error condition.
+        The resulting function will raise a ValueError when evaluated."""
+        return _ErrorFunction()
+
+    @staticmethod
     def constant(k):
         return _ConstantFunction(k)
 
@@ -39,30 +46,60 @@ class Function(object):
         return _IdentityFunction()
 
     @staticmethod
-    def sum(f, g):
-        if not (isinstance(f, Function) and isinstance(g, Function)):
+    def sum(*args):
+        if not all(isinstance(f, Function) for f in args):
             raise ValueError
-        if isinstance(f, _ConstantFunction) and f._k == 0:
-            return g
-        if isinstance(g, _ConstantFunction) and g._k == 0:
-            return f
-        if isinstance(f, _ConstantFunction) and \
-                isinstance(g, _ConstantFunction):
-            return _ConstantFunction(f._k + g._k)
-        return _SumFunction(f, g)
+        # Expand any args that are _SumFunctions into their terms.
+        expanded_args = []
+        for f in args:
+            if isinstance(f, _SumFunction):
+                expanded_args.extend(f._terms)
+            else:
+                expanded_args.append(f)
+        # Collect constants
+        const_term = 0
+        other_terms = []
+        for f in expanded_args:
+            if isinstance(f, _ConstantFunction):
+                const_term += f._k
+            else:
+                other_terms.append(f)
+        # Do other simplifications
+        if len(other_terms) == 0:
+            return _ConstantFunction(const_term)
+        if const_term != 0:
+            other_terms.insert(0, _ConstantFunction(const_term))
+        if len(other_terms) == 1:
+            return other_terms[0]
+        return _SumFunction(tuple(other_terms))
 
     @staticmethod
-    def product(f, g):
-        if not (isinstance(f, Function) and isinstance(g, Function)):
+    def product(*args):
+        if not all(isinstance(f, Function) for f in args):
             raise ValueError
-        if isinstance(f, _ConstantFunction) and f._k == 1:
-            return g
-        if isinstance(g, _ConstantFunction) and g._k == 1:
-            return f
-        if isinstance(f, _ConstantFunction) and \
-                isinstance(g, _ConstantFunction):
-            return _ConstantFunction(f._k * g._k)
-        return _ProductFunction(f, g)
+        # Expand any args that are _ProductFunctions into their terms.
+        expanded_args = []
+        for f in args:
+            if isinstance(f, _ProductFunction):
+                expanded_args.extend(f._terms)
+            else:
+                expanded_args.append(f)
+        # Collect constants
+        const_term = 1
+        other_terms = []
+        for f in expanded_args:
+            if isinstance(f, _ConstantFunction):
+                const_term *= f._k
+            else:
+                other_terms.append(f)
+        # Do other simplifications
+        if len(other_terms) == 0:
+            return _ConstantFunction(const_term)
+        if const_term != 1:
+            other_terms.insert(0, _ConstantFunction(const_term))
+        if len(other_terms) == 1:
+            return other_terms[0]
+        return _ProductFunction(tuple(other_terms))
 
     @staticmethod
     def quotient(f, g):
@@ -76,7 +113,10 @@ class Function(object):
             raise ValueError
         if isinstance(f, _ConstantFunction) and \
                 isinstance(g, _ConstantFunction):
-            return Function.constant(f._k ** g._k)
+            try:
+                return Function.constant(f._k ** g._k)
+            except (ValueError, ZeroDivisionError):
+                return Function.error()
         if isinstance(g, _ConstantFunction) and g._k == 1:
             return f
         # This is very specific, but we think it will occur lots
@@ -93,6 +133,23 @@ class Function(object):
         if not isinstance(f, Function):
             raise ValueError
         return _LogFunction(f)
+
+
+class _ErrorFunction(Function):
+    def __call__(self, param):
+        raise ValueError
+
+    def derivative(self):
+        return self
+
+    def weak_simplify(self):
+        return self
+
+    def __str__(self):
+        return '<error>'
+
+    def __repr__(self):
+        return 'Function.error()'
 
 
 class _ConstantFunction(Function):
@@ -136,58 +193,65 @@ class _IdentityFunction(Function):
 
 
 class _SumFunction(Function):
-    def __init__(self, f, g):
-        assert isinstance(f, Function)
-        assert isinstance(g, Function)
-        self.__f = f
-        self.__g = g
+    def __init__(self, terms):
+        assert isinstance(terms, tuple)
+        assert len(terms) >= 2
+        assert all(isinstance(f, Function) for f in terms)
+        self._terms = terms
 
     def __call__(self, param):
-        return self.__f(param) + self.__g(param)
+        return sum(f(param) for f in self._terms)
 
     def derivative(self):
-        return Function.sum(self.__f.derivative(), self.__g.derivative())
+        return Function.sum(*[f.derivative() for f in self._terms])
 
     def weak_simplify(self):
-        f = self.__f.weak_simplify()
-        g = self.__g.weak_simplify()
-        return Function.sum(f, g)
+        return Function.sum(*[f.weak_simplify() for f in self._terms])
 
     def __str__(self):
-        return '({0} + {1})'.format(self.__f, self.__g)
+        return '({0})'.format(' + '.join(str(f) for f in self._terms))
 
     def __repr__(self):
-        return 'Function.sum({0!r}, {1!r})'.format(self.__f, self.__g)
+        return 'Function.sum({0})'.format(
+            ', '.join(repr(f) for f in self._terms))
 
 
 class _ProductFunction(Function):
-    def __init__(self, f, g):
-        assert isinstance(f, Function)
-        assert isinstance(g, Function)
-        self.__f = f
-        self.__g = g
+    def __init__(self, terms):
+        assert isinstance(terms, tuple)
+        assert len(terms) >= 2
+        assert all(isinstance(f, Function) for f in terms)
+        self._terms = terms
 
     def __call__(self, param):
-        return self.__f(param) * self.__g(param)
+        evaluated_terms = [f(param) for f in self._terms]
+        result = evaluated_terms[0]
+        for i in xrange(1, len(evaluated_terms)):
+            result *= evaluated_terms[i]
+        return result
 
     def derivative(self):
-        return Function.sum(Function.product(self.__f.derivative(), self.__g),
-                            Function.product(self.__f, self.__g.derivative()))
+        term_range = xrange(len(self._terms))
+        return Function.sum(
+            *[Function.product(
+                    *[(self._terms[j].derivative() if i == j
+                       else self._terms[j])
+                      for j in term_range])
+              for i in term_range])
 
     def weak_simplify(self):
-        f = self.__f.weak_simplify()
-        g = self.__g.weak_simplify()
-        if isinstance(f, _ConstantFunction) and f._k == 0:
-            return f
-        if isinstance(g, _ConstantFunction) and g._k == 0:
-            return g
-        return Function.product(f, g)
+        result = Function.product(*[f.weak_simplify() for f in self._terms])
+        if isinstance(result, _ProductFunction) \
+                and isinstance(result._terms[0], _ConstantFunction) \
+                and result._terms[0]._k == 0:
+            return result._terms[0]
+        return result
 
     def __str__(self):
-        return '({0} * {1})'.format(self.__f, self.__g)
+        return '({0})'.format(' * '.join(str(f) for f in self._terms))
 
     def __repr__(self):
-        return 'Function.product({0!r}, {1!r})'.format(self.__f, self.__g)
+        return 'Function.product({0})'.format(', '.join(repr(f) for f in self._terms))
 
 
 class _QuotientFunction(Function):
@@ -312,6 +376,14 @@ class _FunctionUnitTests(unittest.TestCase):
             # We want v1 and v2 to be within tol of each other
             self.assertTrue(abs(v1-v2) / abs(v1+v2) < tol)
 
+    def test_error(self):
+        f = Function.error()
+        self.assertTrue(isinstance(f, _ErrorFunction))
+        self.assertRaises(ValueError, f, 0)
+        self.assertTrue(isinstance(f.derivative(), _ErrorFunction))
+        self.assertEqual(str(f), '<error>')
+        self.assertEqual(repr(f), 'Function.error()')
+
     def test_const(self):
         for val in xrange(5):
             self.assertEqual(val, Function.constant(val)(87))
@@ -343,27 +415,45 @@ class _FunctionUnitTests(unittest.TestCase):
                 self.assertEqual(i+j, sum_func(Interval(0, 1)))
         self.assertEqual(str(Function.sum(Function.identity(),
                                           Function.constant(2))),
-                         '(x + 2)')
+                         '(2 + x)')
         self.assertEqual(repr(Function.sum(Function.identity(),
                                            Function.constant(2))),
-                         'Function.sum(Function.identity(), ' +
-                         'Function.constant(2))')
+                         'Function.sum(Function.constant(2), ' +
+                         'Function.identity())')
         self.assertEqual(Function.sum(Function.identity(),
                                       Function.constant(5)).derivative()(8), 1)
         self.numericalDerivativeTest(Function.sum(Function.identity(),
                                                   Function.identity()))
         self.numericalDerivativeTest(Function.sum(Function.identity(),
                                                   Function.constant(5)))
-        # Simplifications
         c = Function.constant
         x = Function.identity()
         prod = Function.product
+        log = Function.log
+        # Variable argument count
+        self.assertEqual(str(Function.sum()), '0')
+        self.assertEqual(str(Function.sum(c(3))), '3')
+        self.assertEqual(str(Function.sum(x)), 'x')
+        f = Function.sum(c(3), x, log(x))
+        self.assertEqual(str(f), '(3 + x + ln(x))')
+        self.assertEqual(repr(f),
+                         'Function.sum(Function.constant(3), '
+                         'Function.identity(), '
+                         'Function.log(Function.identity()))')
+        self.assertEqual(f(2), 3 + 2 + math.log(2))
+        self.numericalDerivativeTest(f)
+        # Simplifications
         # 0*x + 2 = 2
         self.assertEqual(
             str(Function.sum(prod(c(0), x), c(2)).weak_simplify()), '2')
         # 2 + 0*x = 2
         self.assertEqual(
             str(Function.sum(c(2), prod(c(0), x)).weak_simplify()), '2')
+        # 2 + 3 = 5
+        self.assertEqual(str(Function.sum(c(2), c(3))), '5')
+        # (x + 1) + 1 = 2 + x
+        self.assertEqual(str(Function.sum(Function.sum(x, c(1)), c(1))),
+                         '(2 + x)')
 
     def test_product(self):
         for val in xrange(5):
@@ -377,22 +467,35 @@ class _FunctionUnitTests(unittest.TestCase):
                                  (Interval(0, 1)))
         self.assertEqual(str(Function.product(Function.identity(),
                                               Function.constant(2))),
-                         '(x * 2)')
+                         '(2 * x)')
         self.assertEqual(repr(Function.product(Function.identity(),
                                                Function.constant(2))),
-                         'Function.product(Function.identity(), ' +
-                         'Function.constant(2))')
+                         'Function.product(Function.constant(2), ' +
+                         'Function.identity())')
         self.assertEqual(Function.product(
                 Function.identity(), Function.constant(4)).derivative()(7), 4)
         self.numericalDerivativeTest(Function.product(Function.identity(),
                                                       Function.identity()))
         self.numericalDerivativeTest(Function.product(Function.identity(),
                                                       Function.constant(5)))
-        # Simplifications:
         c = Function.constant
         x = Function.identity()
         prod = Function.product
+        log = Function.log
         pow = Function.power
+        # Variable argument count
+        self.assertEqual(str(Function.product()), '1')
+        self.assertEqual(str(Function.product(c(3))), '3')
+        self.assertEqual(str(Function.product(x)), 'x')
+        f = Function.product(c(3), x, log(x))
+        self.assertEqual(str(f), '(3 * x * ln(x))')
+        self.assertEqual(repr(f),
+                         'Function.product(Function.constant(3), '
+                         'Function.identity(), '
+                         'Function.log(Function.identity()))')
+        self.assertEqual(f(2), 3 * 2 * math.log(2))
+        self.numericalDerivativeTest(f)
+        # Simplifications:
         # x*0 = 0
         self.assertEqual(str(prod(x, c(0)).weak_simplify()), '0')
         # 0*x = 0
@@ -411,6 +514,8 @@ class _FunctionUnitTests(unittest.TestCase):
         self.assertEqual(str(prod(pow(x, c(0)), x).weak_simplify()), 'x')
         # x*(x^0) = x
         self.assertEqual(str(prod(x, pow(x, c(0))).weak_simplify()), 'x')
+        # (x*2)*3 = 6*x
+        self.assertEqual(str(prod(prod(x, c(2)), c(3))), '(6 * x)')
 
     def test_quotient(self):
         for v in xrange(5):
@@ -442,9 +547,9 @@ class _FunctionUnitTests(unittest.TestCase):
                               plus(pow(x, c(3)), c(1)))
         self.assertEqual(
             str(f.derivative().weak_simplify()),
-            '((((x * 2) * ((x ** 3) + 1))'
-            ' + (-1 * (((x ** 2) + 1) * ((x ** 2) * 3))))'
-            ' / (((x ** 3) + 1) ** 2))')
+            '(((2 * x * (1 + (x ** 3)))'
+            ' + (-3 * (1 + (x ** 2)) * (x ** 2)))'
+            ' / ((1 + (x ** 3)) ** 2))')
         # Simplifications
         # (1 + x*0)/(2*x) = 1/(2*x)
         f = Function.quotient(plus(c(1), prod(x, c(0))), prod(c(2), x))
@@ -524,6 +629,23 @@ class _FunctionUnitTests(unittest.TestCase):
         # (2 + 0*x)^3 = 8
         f = Function.power(sum(c(2), prod(c(0), x)), c(3))
         self.assertEqual(str(f.weak_simplify()), '8')
+
+    def test_power_consts(self):
+        # Test that power operates correctly when raising a const to a
+        # const, especically in the presence of exceptions.
+        values = [-2, -1.5, -1, -0.5, 0, 0.5, 1, 1.5, 2]
+        for x in values:
+            for y in values:
+                try:
+                    z = x ** y
+                except (ValueError, ZeroDivisionError):
+                    z = None
+                f = Function.power(Function.constant(x), Function.constant(y))
+                if z is None:
+                    self.assertTrue(isinstance(f, _ErrorFunction))
+                else:
+                    self.assertTrue(isinstance(f, _ConstantFunction))
+                    self.assertEqual(f._k, z)
 
     def test_natural_log(self):
         for val in xrange(1, 5):
