@@ -365,10 +365,10 @@ class _FunctionUnitTests(unittest.TestCase):
                              Function.identity()),
             Function.constant(i.left))
 
-    def numericalDerivativeTest(self, f):
+    def numericalDerivativeTest(self, f,
+                                points = [2.74557456, 1.1436346, 1.743563456]):
         h = 1e-6
         tol = 1e-4
-        points = [ 2.74557456, 1.1436346, 1.743563456 ]
         deriv = f.derivative()
         for x in points:
             v1 = deriv(x)
@@ -582,8 +582,15 @@ class _FunctionUnitTests(unittest.TestCase):
         for v in [2, 3, 4, 5, 6.666]:
             self.numericalDerivativeTest(Function.power(
                     Function.identity(), Function.constant(v)))
+            if v == round(v):
+                self.numericalDerivativeTest(Function.power(
+                        Function.identity(), Function.constant(v)),
+                                             points = [-1.3483255])
             self.numericalDerivativeTest(Function.power(
                     Function.constant(v), Function.identity()))
+            self.numericalDerivativeTest(Function.power(
+                    Function.constant(v), Function.identity()),
+                                         points = [-1.3483255])
         self.numericalDerivativeTest(Function.power(
                 Function.identity(), Function.identity()))
         # x^2 + 3x + 5
