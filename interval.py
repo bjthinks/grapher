@@ -146,6 +146,14 @@ class Interval(object):
             raise ValueError
         return Interval(log(self.left), log(self.right))
 
+    def sin(self):
+        '''Compute the sine of the interval.'''
+        return Interval(-1,1)
+
+    def cos(self):
+        '''Compute the cosine of the interval.'''
+        return Interval(-1,1)
+
 
 class intervalTest(unittest.TestCase):
     def test_eq(self):
@@ -238,6 +246,12 @@ class intervalTest(unittest.TestCase):
         self.assertRaises(ValueError, Interval(0, 1).log)
         self.assertRaises(ValueError, Interval(-1, 1).log)
         self.assertRaises(ValueError, Interval(-2, -1).log)
+
+    def test_sin(self):
+        self.assertTrue(Interval(2,4).sin() in Interval(-1,1))
+
+    def test_cos(self):
+        self.assertTrue(Interval(2,4).cos() in Interval(-1,1))
 
     def test_ops(self):
         # unary ops

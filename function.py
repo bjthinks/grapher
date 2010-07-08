@@ -134,6 +134,18 @@ class Function(object):
             raise ValueError
         return _LogFunction(f)
 
+    @staticmethod
+    def sin(f):
+        if not isinstance(f, Function):
+            raise ValueError
+        return _SinFunction(f)
+
+    @staticmethod
+    def cos(f):
+        if not isinstance(f, Function):
+            raise ValueError
+        return _CosFunction(f)
+
 
 class _ErrorFunction(Function):
     def __call__(self, param):
@@ -347,6 +359,60 @@ class _LogFunction(Function):
 
     def __repr__(self):
         return 'Function.log({0})'.format(repr(self.__f))
+
+
+class _SinFunction(Function):
+    def __init__(self, f):
+        assert isinstance(f, Function)
+        self.__f = f
+
+    def __call__(self, param):
+        f_value = self.__f(param)
+        if isinstance(f_value, Interval):
+            return Interval.sin(f_value)
+        else:
+            return math.sin(f_value)
+
+    def derivative(self):
+        return Function.product(Function.cos(self.__f), self.__f.derivative())
+
+    def weak_simplify(self):
+        f = self.__f.weak_simplify()
+        return Function.sin(f)
+
+    def __str__(self):
+        return 'sin({0})'.format(self.__f)
+
+    def __repr__(self):
+        return 'Function.sin({0})'.format(repr(self.__f))
+
+
+class _CosFunction(Function):
+    def __init__(self, f):
+        assert isinstance(f, Function)
+        self.__f = f
+
+    def __call__(self, param):
+        f_value = self.__f(param)
+        if isinstance(f_value, Interval):
+            return Interval.cos(f_value)
+        else:
+            return math.cos(f_value)
+
+    def derivative(self):
+        return Function.product(Function.product(
+                Function.constant(-1), Function.sin(self.__f)),
+                                self.__f.derivative())
+
+    def weak_simplify(self):
+        f = self.__f.weak_simplify()
+        return Function.cos(f)
+
+    def __str__(self):
+        return 'cos({0})'.format(self.__f)
+
+    def __repr__(self):
+        return 'Function.cos({0})'.format(repr(self.__f))
 
 
 class _FunctionUnitTests(unittest.TestCase):
@@ -684,6 +750,62 @@ class _FunctionUnitTests(unittest.TestCase):
         # ln (x + x*0) = ln x
         f = Function.log(sum(x, prod(x, c(0))))
         self.assertEqual(str(f.weak_simplify()), 'ln(x)')
+
+    def test_sine(self):
+        for val in xrange(1, 5):
+            self.assertEqual(math.sin(val),
+                             Function.sin(Function.identity())(val))
+        for i in self.intervals():
+            expected = i.sin()
+            self.assertEqual(expected,
+                             Function.sin(Function.identity())(i))
+        self.assertEqual(str(Function.sin(Function.constant(5))),
+                         'sin(5)')
+        self.assertEqual(repr(Function.sin(Function.constant(5))),
+                         'Function.sin(Function.constant(5))')
+        self.numericalDerivativeTest(Function.sin(Function.identity()))
+        self.numericalDerivativeTest(
+            Function.sin(
+                Function.sum(Function.identity(), Function.constant(1))))
+        self.numericalDerivativeTest(
+            Function.sin(
+                Function.product(Function.identity(), Function.constant(2))))
+        # Simplifications
+        c = Function.constant
+        x = Function.identity()
+        prod = Function.product
+        sum = Function.sum
+        # sin (x + x*0) = sin x
+        f = Function.sin(sum(x, prod(x, c(0))))
+        self.assertEqual(str(f.weak_simplify()), 'sin(x)')
+
+    def test_cosine(self):
+        for val in xrange(1, 5):
+            self.assertEqual(math.cos(val),
+                             Function.cos(Function.identity())(val))
+        for i in self.intervals():
+            expected = i.cos()
+            self.assertEqual(expected,
+                             Function.cos(Function.identity())(i))
+        self.assertEqual(str(Function.cos(Function.constant(5))),
+                         'cos(5)')
+        self.assertEqual(repr(Function.cos(Function.constant(5))),
+                         'Function.cos(Function.constant(5))')
+        self.numericalDerivativeTest(Function.cos(Function.identity()))
+        self.numericalDerivativeTest(
+            Function.cos(
+                Function.sum(Function.identity(), Function.constant(1))))
+        self.numericalDerivativeTest(
+            Function.cos(
+                Function.product(Function.identity(), Function.constant(2))))
+        # Simplifications
+        c = Function.constant
+        x = Function.identity()
+        prod = Function.product
+        sum = Function.sum
+        # cos (x + x*0) = cos x
+        f = Function.cos(sum(x, prod(x, c(0))))
+        self.assertEqual(str(f.weak_simplify()), 'cos(x)')
 
 if __name__ == '__main__':
     unittest.main()
