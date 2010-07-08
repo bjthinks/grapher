@@ -47,6 +47,8 @@ class Interval(object):
         return 'Interval{0}'.format((self.left, self.right))
 
     def __contains__(self, other):
+        if isinstance(other, Interval):
+            return self.left <= other.left <= other.right <= self.right
         if not isinstance(other, (int, long, float)):
             raise TypeError
         return self.left <= other <= self.right
@@ -215,7 +217,15 @@ class intervalTest(unittest.TestCase):
         x = Interval(3, 5)
         for t, b in ((2, False), (3, True), (4, True), (5, True), (6, False)):
             self.assertEqual(t in x, b)
-        self.assertRaises(TypeError, x.__contains__, x)
+        self.assertTrue(Interval(-1,1) in Interval(-2,2))
+        self.assertTrue(Interval(-2,2) in Interval(-2,2))
+        self.assertTrue(Interval(2,2) in Interval(2,2))
+        self.assertFalse(Interval(1,3) in Interval(2,4))
+        self.assertFalse(Interval(2,4) in Interval(1,3))
+        self.assertFalse(Interval(1,4) in Interval(2,3))
+        self.assertFalse(Interval(2,3) in Interval(3,3))
+        self.assertFalse(Interval(1,1) in Interval(2,3))
+        self.assertRaises(TypeError, x.__contains__, '')
 
     def test_reciprocal(self):
         self.assertEqual(Interval(2,4).reciprocal(), Interval(.5, .25))
