@@ -21,9 +21,6 @@ EXP_FUNCTIONS = ['exp']
 
 FUNCTIONS = TRIG_FUNCTIONS + INVERSE_TRIG_FUNCTIONS + LOG_FUNCTIONS + EXP_FUNCTIONS
 
-def identity(x):
-    return x
-
 # A sequence of tuples (REGEXP, TOKEN_BUILDER), where REGEXP is the
 # regular expression to match, and TOKEN_BUILDER is a function to call
 # to transform a string into a token.
