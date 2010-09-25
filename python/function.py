@@ -309,6 +309,10 @@ class _PowerFunction(Function):
         return self._f(param) ** self._g(param)
 
     def derivative(self):
+        if isinstance(self._g, _ConstantFunction):
+            # D(f(x) ** k) == k * f(x) ** (k-1) * Df(x)
+            return Function.product(Function.constant(self._g._k),
+                                    Function.power(self._f, Function.constant(self._g._k - 1)), self._f.derivative())
         # f(x) ** g(x) * Dg(x) * log(f(x)) + f(x) ** (g(x) - 1) * g(x) * Df(x)
         return Function.sum(
             Function.product(self,
