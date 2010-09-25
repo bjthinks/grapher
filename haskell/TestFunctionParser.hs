@@ -37,7 +37,28 @@ atomTests = [
   ]
 
 rexprTests = [
-  --testSucc fVariables0 [] $ FunctionProduct []
+  testSucc fVariables0 [] $ FunctionProduct [],
+  testSucc fVariables0 [Variable "a"] $ FunctionVariable "a",
+  testSucc fVariables0 [Variable "a", Variable "b", Variable "c"] $
+  FunctionProduct [FunctionVariable "a", FunctionVariable "b",
+                   FunctionVariable "c"],
+  testPart fVariables0 [Variable "a", Variable "b", Number 1.0]
+  (FunctionProduct [FunctionVariable "a", FunctionVariable "b"]) [Number 1.0],
+  testFail fVariables1 [],
+  testSucc fVariables1 [Variable "a"] $ FunctionVariable "a",
+  testSucc fVariables1 [Variable "a", Variable "b", Variable "c"] $
+  FunctionProduct [FunctionVariable "a", FunctionVariable "b",
+                   FunctionVariable "c"],
+  testPart fVariables1 [Variable "a", Variable "b", Number 1.0]
+  (FunctionProduct [FunctionVariable "a", FunctionVariable "b"]) [Number 1.0],
+  testFail fRExpr [],
+  testSucc fRExpr [Number 2.0] $ FunctionNumber 2.0,
+  testSucc fRExpr [Variable "a"] $ FunctionVariable "a",
+  testPart fRExpr [Number 1.0, Number 2.0] (FunctionNumber 1.0) [Number 2.0],
+  testSucc fRExpr [Number 1.0, Variable "a"] $
+  FunctionProduct [FunctionNumber 1.0, FunctionVariable "a"],
+  testSucc fRExpr [Variable "a", Variable "b"] $
+  FunctionProduct [FunctionVariable "a", FunctionVariable "b"]
   ]
 
 tests = test (atomTests ++ rexprTests)

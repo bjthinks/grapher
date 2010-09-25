@@ -25,11 +25,29 @@ rexpr = '(' aexpr ')' | number variable* | variable+
 function = functionstr ('^' ('-' '1' | number | variable | '(' aexpr ')'))?
 -}
 
-{-
+fRExpr :: Parser Token Function
+fRExpr = (do x <- fNumber
+             y <- fVariables0
+             return $ makeProduct [x,y]) ||| fVariables1
+
+fVariables1 :: Parser Token Function
+fVariables1 = do xs <- pPlus fVariable
+                 return $ makeProduct xs
+
 fVariables0 :: Parser Token Function
 fVariables0 = do xs <- pStar fVariable
-                 return $ FunctionProduct xs
--}
+                 return $ makeProduct xs
+
+makeProduct :: [Function] -> Function
+makeProduct fs = case flattenProduct fs of
+  [] -> FunctionProduct []
+  [f] -> f
+  fs -> FunctionProduct fs
+
+flattenProduct :: [Function] -> [Function]
+flattenProduct [] = []
+flattenProduct (FunctionProduct f:fs) = flattenProduct f ++ flattenProduct fs
+flattenProduct (f:fs) = f : flattenProduct fs
 
 fNumber :: Parser Token Function
 fNumber = do Number x <- pProp isNumber
