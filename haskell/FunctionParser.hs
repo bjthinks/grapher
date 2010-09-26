@@ -25,6 +25,7 @@ rexpr = '(' aexpr ')' | number variable* | variable+
 function = functionstr ('^' ('-' '1' | number | variable | '(' aexpr ')'))?
 -}
 
+-- TODO: This needs '(' aexpr ')' added as a third alternative
 fRExpr :: Parser Token Function
 fRExpr = (do x <- fNumber
              y <- fVariables0
