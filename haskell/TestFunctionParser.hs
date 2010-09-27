@@ -61,6 +61,22 @@ rexprTests = [
   FunctionProduct [FunctionVariable "a", FunctionVariable "b"]
   ]
 
-tests = test (atomTests ++ rexprTests)
+functionTests = [
+  testSucc fFExpr [Function "sin", Variable "x"] $
+  FunctionFunction "sin" (FunctionVariable "x"),
+  testFail fFExpr [Function "sin"],
+  testFail fFExpr [Variable "x"],
+  testSucc fFExpr [Function "sin", Symbol '^', Symbol '-', Number 1.0,
+                   Variable "x"] $
+  FunctionInverse $ FunctionFunction "sin" $ FunctionVariable "x",
+  testSucc fFExpr [Function "sin", Symbol '^', Number 2.0, Variable "x"] $
+  FunctionPower (FunctionFunction "sin" $ FunctionVariable "x") $
+  FunctionNumber 2.0,
+  testSucc fFExpr [Function "sin", Symbol '^', Variable "x", Variable "y"] $
+  FunctionPower (FunctionFunction "sin" $ FunctionVariable "y") $
+  FunctionVariable "x"
+  ]
+
+tests = test (atomTests ++ rexprTests ++ functionTests)
 
 main = runTestTT $ tests
