@@ -10,6 +10,7 @@ data Function = FunctionSum [Function] |
                 FunctionQuotient Function Function |
                 FunctionPower Function Function |
                 FunctionFunction String Function |
+                FunctionInverse Function |
                 FunctionVariable String |
                 FunctionNumber Double
                 deriving (Show, Eq)
@@ -24,6 +25,38 @@ fexpr = function+ rexpr
 rexpr = '(' aexpr ')' | number variable* | variable+
 function = functionstr ('^' ('-' '1' | number | variable | '(' aexpr ')'))?
 -}
+
+fFExpr :: Parser Token Function
+fFExpr = do fs <- pPlus fFunction
+            arg <- fRExpr
+            -- I'm not sure if the next line is beautiful or horrible,
+            -- but it's definitely Haskell...
+            return $ foldr ($) arg fs
+
+fFunction :: Parser Token (Function -> Function)
+fFunction = do f <- fFunctionStr
+               p <- pMaybe fFunctionRaisedTo
+               case p of
+                 Nothing -> return f
+                 Just pp -> return $ pp . f
+
+fFunctionRaisedTo :: Parser Token (Function -> Function)
+fFunctionRaisedTo = do pElt $ Symbol '^'
+                       fFunctionRaisedToPower ||| fFunctionRaisedToInverse
+
+-- TODO: This needs '(' aexpr ')' added as an alternative
+fFunctionRaisedToPower :: Parser Token (Function -> Function)
+fFunctionRaisedToPower = do r <- fNumber ||| fVariable
+                            return $ flip FunctionPower r
+
+fFunctionRaisedToInverse :: Parser Token (Function -> Function)
+fFunctionRaisedToInverse = do pElt $ Symbol '-'
+                              pElt $ Number 1.0
+                              return FunctionInverse
+
+fFunctionStr :: Parser Token (Function -> Function)
+fFunctionStr = do Function x <- pProp isFunction
+                  return $ FunctionFunction x
 
 -- TODO: This needs '(' aexpr ')' added as a third alternative
 fRExpr :: Parser Token Function
@@ -66,11 +99,11 @@ isVariable :: Token -> Bool
 isVariable (Variable _) = True
 isVariable _ = False
 
-{-
 isFunction :: Token -> Bool
 isFunction (Function _) = True
 isFunction _ = False
 
+{-
 isSymbol :: Token -> Bool
 isSymbol (Symbol _) = True
 isSymbol _ = False
