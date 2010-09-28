@@ -26,6 +26,25 @@ rexpr = '-'? ('(' aexpr ')' | number variable* | variable+)
 function = functionstr ('^' ('-' '1' | number | variable | '(' aexpr ')'))?
 -}
 
+fJExpr :: Parser Token Function
+fJExpr = do s <- pMaybe $ pElt $ Symbol '-'
+            ts <- pPlus fEExpr
+            let u = case s of
+                  Nothing -> ts
+                  Just _ -> FunctionNumber (negate 1.0) : ts
+            return $ FunctionProduct u
+
+fEExpr :: Parser Token Function
+fEExpr = do b <- fAtom
+            e <- pMaybe (pElt (Symbol '^') >> fJExpr)
+            case e of
+              Nothing -> return b
+              Just ee -> return $ FunctionPower b ee
+
+-- TODO: This needs '(' aexpr ')' added as an alternative
+fAtom :: Parser Token Function
+fAtom = fNumber ||| fVariable ||| fFExpr
+
 fFExpr :: Parser Token Function
 fFExpr = do fs <- pPlus fFunction
             arg <- fRExpr
