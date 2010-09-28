@@ -66,7 +66,13 @@ rexprTests = [
   FunctionProduct [FunctionVariable "a", FunctionVariable "b"],
   testSucc fRExpr (tok "-a") $
   FunctionProduct [FunctionNumber (negate 1.0), FunctionVariable "a"],
-  testSucc fRExpr (tok "-3") $ FunctionNumber $ negate 3.0
+  testSucc fRExpr (tok "-3") $ FunctionNumber $ negate 3.0,
+  testSucc fRExpr (tok "-2a b") $ FunctionProduct
+  [FunctionNumber (negate 2), FunctionVariable "a", FunctionVariable "b"],
+  testPart fRExpr (tok "2 3 a")
+  (FunctionNumber 2.0) [Number 3.0, Variable "a"],
+  testPart fRExpr (tok "-2 3 a")
+  (FunctionNumber $ negate 2.0) [Number 3.0, Variable "a"]
   ]
 
 functionTests = [
