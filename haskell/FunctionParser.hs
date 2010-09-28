@@ -22,7 +22,7 @@ jexpr = '-'? eexpr+
 eexpr = atom ('^' jexpr)?
 atom = number | variable | '(' aexpr ')' | fexpr
 fexpr = function+ rexpr
-rexpr = '(' aexpr ')' | number variable* | variable+
+rexpr = '-'? ('(' aexpr ')' | number variable* | variable+)
 function = functionstr ('^' ('-' '1' | number | variable | '(' aexpr ')'))?
 -}
 
@@ -58,11 +58,18 @@ fFunctionStr :: Parser Token (Function -> Function)
 fFunctionStr = do Function x <- pProp isFunction
                   return $ FunctionFunction x
 
--- TODO: This needs '(' aexpr ')' added as a third alternative
 fRExpr :: Parser Token Function
-fRExpr = (do x <- fNumber
-             y <- fVariables0
-             return $ makeProduct [x,y]) ||| fVariables1
+fRExpr = do s <- pMaybe $ pElt $ Symbol '-'
+            r <- fRExpr'
+            case s of
+              Nothing -> return r
+              Just _ -> return $ makeProduct [FunctionNumber $ negate 1.0, r]
+
+-- TODO: This needs '(' aexpr ')' added as a third alternative
+fRExpr' :: Parser Token Function
+fRExpr' = (do x <- fNumber
+              y <- fVariables0
+              return $ makeProduct [x,y]) ||| fVariables1
 
 fVariables1 :: Parser Token Function
 fVariables1 = do xs <- pPlus fVariable
@@ -76,6 +83,8 @@ makeProduct :: [Function] -> Function
 makeProduct fs = case flattenProduct fs of
   [] -> FunctionProduct []
   [f] -> f
+  (FunctionNumber a : FunctionNumber b : fs) ->
+    makeProduct (FunctionNumber (a*b) : fs)
   fs -> FunctionProduct fs
 
 flattenProduct :: [Function] -> [Function]
