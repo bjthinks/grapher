@@ -63,7 +63,10 @@ rexprTests = [
   testSucc fRExpr (tok "1 a") $
   FunctionProduct [FunctionNumber 1.0, FunctionVariable "a"],
   testSucc fRExpr (tok "a b") $
-  FunctionProduct [FunctionVariable "a", FunctionVariable "b"]
+  FunctionProduct [FunctionVariable "a", FunctionVariable "b"],
+  testSucc fRExpr (tok "-a") $
+  FunctionProduct [FunctionNumber (negate 1.0), FunctionVariable "a"],
+  testSucc fRExpr (tok "-3") $ FunctionNumber $ negate 3.0
   ]
 
 functionTests = [
@@ -78,7 +81,12 @@ functionTests = [
   FunctionNumber 2.0,
   testSucc fFExpr (tok "sin^x y") $
   FunctionPower (FunctionFunction "sin" $ FunctionVariable "y") $
-  FunctionVariable "x"
+  FunctionVariable "x",
+  testFail fFExpr (tok "sin^-2 x"),
+  testFail fFExpr (tok "sin^-x y"),
+  testSucc fFExpr (tok "sin -x") $
+  FunctionFunction "sin" $ FunctionProduct [FunctionNumber (negate 1.0),
+                                            FunctionVariable "x"]
   ]
 
 tests = test (atomTests ++ rexprTests ++ functionTests)
