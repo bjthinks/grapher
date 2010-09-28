@@ -97,7 +97,21 @@ functionTests = [
                                             FunctionVariable "x"],
   testSucc fFExpr (tok "sin cos tan x") $
   FunctionFunction "sin" $ FunctionFunction "cos" $ FunctionFunction "tan" $
-  FunctionVariable "x"
+  FunctionVariable "x",
+  testPart fFExpr (tok "sin^x 2 y z 3") $
+  FunctionPower (FunctionFunction "sin" $
+                 FunctionProduct [FunctionNumber 2.0,
+                                  FunctionVariable "y",
+                                  FunctionVariable "z"])
+  (FunctionNumber 3.0) [Number 3.0],
+  testPart fFExpr (tok "sin^2 3 4") $
+  FunctionPower (FunctionFunction "sin" $ FunctionNumber 3.0)
+  (FunctionNumber 3.0) [Number 4.0],
+  TestPart fFExpr (tok "sin cos x 2") $
+  FunctionFunction "sin" (FunctionFunction "cos" $ FunctionVariable "x")
+  [Number 2.0],
+  TestPart fFExpr (tok "sin 2 cos x") $
+  FunctionFunction "sin" (FunctionNumber 2.0) [Function "cos", Variable "x"]
   ]
 
 tests = test (atomTests ++ rexprTests ++ functionTests)
