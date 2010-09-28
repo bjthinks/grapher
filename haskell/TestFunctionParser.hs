@@ -23,48 +23,48 @@ testFail parser input
   = test $ unless (isFail $ parseSome parser input)
     (assertFailure "Expected failure, but succeeded")
 
-atomTests = [
-  testSucc fNumber [Number 3.0] $ FunctionNumber 3.0,
-  testFail fNumber [],
-  testFail fNumber [Variable "abc"],
-  testFail fNumber [Function "sin"],
-  testFail fNumber [Symbol '+'],
-  testSucc fVariable [Variable "x"] $ FunctionVariable "x",
-  testFail fVariable [],
-  testFail fVariable [Number 1.5],
-  testFail fVariable [Function "cos"],
-  testFail fVariable [Symbol '(']
-  ]
-
-rexprTests = [
-  testSucc fVariables0 [] $ FunctionProduct [],
-  testSucc fVariables0 [Variable "a"] $ FunctionVariable "a",
-  testSucc fVariables0 [Variable "a", Variable "b", Variable "c"] $
-  FunctionProduct [FunctionVariable "a", FunctionVariable "b",
-                   FunctionVariable "c"],
-  testPart fVariables0 [Variable "a", Variable "b", Number 1.0]
-  (FunctionProduct [FunctionVariable "a", FunctionVariable "b"]) [Number 1.0],
-  testFail fVariables1 [],
-  testSucc fVariables1 [Variable "a"] $ FunctionVariable "a",
-  testSucc fVariables1 [Variable "a", Variable "b", Variable "c"] $
-  FunctionProduct [FunctionVariable "a", FunctionVariable "b",
-                   FunctionVariable "c"],
-  testPart fVariables1 [Variable "a", Variable "b", Number 1.0]
-  (FunctionProduct [FunctionVariable "a", FunctionVariable "b"]) [Number 1.0],
-  testFail fRExpr [],
-  testSucc fRExpr [Number 2.0] $ FunctionNumber 2.0,
-  testSucc fRExpr [Variable "a"] $ FunctionVariable "a",
-  testPart fRExpr [Number 1.0, Number 2.0] (FunctionNumber 1.0) [Number 2.0],
-  testSucc fRExpr [Number 1.0, Variable "a"] $
-  FunctionProduct [FunctionNumber 1.0, FunctionVariable "a"],
-  testSucc fRExpr [Variable "a", Variable "b"] $
-  FunctionProduct [FunctionVariable "a", FunctionVariable "b"]
-  ]
-
 tok :: String -> [Token]
 tok str = case parseAll pTokenizer str of
   Left _ -> error "Could not tokenize test string"
   Right ts -> ts
+
+atomTests = [
+  testSucc fNumber (tok "3") $ FunctionNumber 3.0,
+  testFail fNumber (tok ""),
+  testFail fNumber (tok "abc"),
+  testFail fNumber (tok "sin"),
+  testFail fNumber (tok "+"),
+  testSucc fVariable (tok "x") $ FunctionVariable "x",
+  testFail fVariable (tok ""),
+  testFail fVariable (tok "1.5"),
+  testFail fVariable (tok "cos"),
+  testFail fVariable (tok "(")
+  ]
+
+rexprTests = [
+  testSucc fVariables0 (tok "") $ FunctionProduct [],
+  testSucc fVariables0 (tok "a") $ FunctionVariable "a",
+  testSucc fVariables0 (tok "a b c") $
+  FunctionProduct [FunctionVariable "a", FunctionVariable "b",
+                   FunctionVariable "c"],
+  testPart fVariables0 (tok "a b 1")
+  (FunctionProduct [FunctionVariable "a", FunctionVariable "b"]) [Number 1.0],
+  testFail fVariables1 (tok ""),
+  testSucc fVariables1 (tok "a") $ FunctionVariable "a",
+  testSucc fVariables1 (tok "a b c") $
+  FunctionProduct [FunctionVariable "a", FunctionVariable "b",
+                   FunctionVariable "c"],
+  testPart fVariables1 (tok "a b 1")
+  (FunctionProduct [FunctionVariable "a", FunctionVariable "b"]) [Number 1.0],
+  testFail fRExpr (tok ""),
+  testSucc fRExpr (tok "2") $ FunctionNumber 2.0,
+  testSucc fRExpr (tok "a") $ FunctionVariable "a",
+  testPart fRExpr (tok "1 2") (FunctionNumber 1.0) [Number 2.0],
+  testSucc fRExpr (tok "1 a") $
+  FunctionProduct [FunctionNumber 1.0, FunctionVariable "a"],
+  testSucc fRExpr (tok "a b") $
+  FunctionProduct [FunctionVariable "a", FunctionVariable "b"]
+  ]
 
 functionTests = [
   testSucc fFExpr (tok "sin x") $
