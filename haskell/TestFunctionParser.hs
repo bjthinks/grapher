@@ -114,6 +114,32 @@ functionTests = [
   (FunctionFunction "sin" (FunctionNumber 2.0)) [Function "cos", Variable "x"]
   ]
 
-tests = test (atomTests ++ rexprTests ++ functionTests)
+juxtaposeAndExponentialTests = [
+  testSucc fJExpr (tok "2") $ FunctionNumber 2.0,
+  testSucc fJExpr (tok "-2") $ FunctionNumber (negate 2.0),
+  testSucc fJExpr (tok "x") $ FunctionVariable "x",
+  testSucc fJExpr (tok "-x") $ FunctionProduct [FunctionNumber $ negate 1.0,
+                                                FunctionVariable "x"],
+  testSucc fJExpr (tok "2x") $ FunctionProduct [FunctionNumber 2.0,
+                                                FunctionVariable "x"],
+  testSucc fJExpr (tok "-2x") $ FunctionProduct [FunctionNumber $ negate 2.0,
+                                                 FunctionVariable "x"],
+  testSucc fJExpr (tok "x y") $ FunctionProduct [FunctionVariable "x",
+                                                 FunctionVariable "y"],
+  testSucc fJExpr (tok "-x y") $ FunctionProduct [FunctionNumber $ negate 1.0,
+                                                  FunctionVariable "x",
+                                                  FunctionVariable "y"],
+  testSucc fJExpr (tok "2x y") $ FunctionProduct [FunctionNumber 2.0,
+                                                  FunctionVariable "x",
+                                                  FunctionVariable "y"],
+  testSucc fJExpr (tok "-2x y") $ FunctionProduct [FunctionNumber $ negate 2.0,
+                                                   FunctionVariable "x",
+                                                   FunctionVariable "y"]
+  -- The below test passes.  Is this bad?
+  -- testSucc fJExpr (tok "2 3") (FunctionNumber 6.0)
+  ]
+
+tests = test (atomTests ++ rexprTests ++ functionTests ++
+              juxtaposeAndExponentialTests)
 
 main = runTestTT $ tests

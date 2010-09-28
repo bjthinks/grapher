@@ -32,7 +32,7 @@ fJExpr = do s <- pMaybe $ pElt $ Symbol '-'
             let u = case s of
                   Nothing -> ts
                   Just _ -> FunctionNumber (negate 1.0) : ts
-            return $ FunctionProduct u
+            return $ makeProduct u
 
 fEExpr :: Parser Token Function
 fEExpr = do b <- fAtom
