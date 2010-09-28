@@ -74,7 +74,13 @@ functionTests = [
   FunctionNumber 2.0,
   testSucc fFExpr [Function "sin", Symbol '^', Variable "x", Variable "y"] $
   FunctionPower (FunctionFunction "sin" $ FunctionVariable "y") $
-  FunctionVariable "x"
+  FunctionVariable "x",
+  testSucc fFExpr [Function "sin", Function "cos", Function "tan",
+                   Variable "x"] $
+  FunctionFunction "sin" $ FunctionFunction "cos" $ FunctionFunction "tan" $
+  FunctionVariable "x",
+  testSucc fFExpr [Function "sin", Symbol '-', Number 1.0] $
+  FunctionFunction "sin" $ FunctionNumber (-1.0)
   ]
 
 tests = test (atomTests ++ rexprTests ++ functionTests)
