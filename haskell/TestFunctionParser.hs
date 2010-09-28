@@ -61,18 +61,22 @@ rexprTests = [
   FunctionProduct [FunctionVariable "a", FunctionVariable "b"]
   ]
 
+tok :: String -> [Token]
+tok str = case parseAll pTokenizer str of
+  Left _ -> error "Could not tokenize test string"
+  Right ts -> ts
+
 functionTests = [
-  testSucc fFExpr [Function "sin", Variable "x"] $
+  testSucc fFExpr (tok "sin x") $
   FunctionFunction "sin" (FunctionVariable "x"),
-  testFail fFExpr [Function "sin"],
-  testFail fFExpr [Variable "x"],
-  testSucc fFExpr [Function "sin", Symbol '^', Symbol '-', Number 1.0,
-                   Variable "x"] $
+  testFail fFExpr (tok "sin"),
+  testFail fFExpr (tok "x"),
+  testSucc fFExpr (tok "sin^-1 x") $
   FunctionInverse $ FunctionFunction "sin" $ FunctionVariable "x",
-  testSucc fFExpr [Function "sin", Symbol '^', Number 2.0, Variable "x"] $
+  testSucc fFExpr (tok "sin^2 x") $
   FunctionPower (FunctionFunction "sin" $ FunctionVariable "x") $
   FunctionNumber 2.0,
-  testSucc fFExpr [Function "sin", Symbol '^', Variable "x", Variable "y"] $
+  testSucc fFExpr (tok "sin^x y") $
   FunctionPower (FunctionFunction "sin" $ FunctionVariable "y") $
   FunctionVariable "x"
   ]
