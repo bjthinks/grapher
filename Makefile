@@ -1,2 +1,2 @@
 deploy:
-	appcfg.py update geekouttest/
+	appcfg.py update functiongrapher
