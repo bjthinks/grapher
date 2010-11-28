@@ -1,0 +1,28 @@
+<h1>Geek Out</h1>
+
+{% for geek in geeks %}
+<div>
+	{{geek.message}} from 
+	{% ifequal geek.who None %}
+		Anonymous
+	{% else %}
+		{{geek.who}}
+	{% endifequal %}
+</div>
+{% endfor %}
+
+<form action="" method="post"
+accept-charset="utf-8">
+	<p>Message: <input
+		type="text"
+		name="message"
+		value=""
+		id="message" /></p>
+	<p>From: <input
+		type="text"
+		name="who"
+		value=""
+		id="who" /></p>
+
+<p><input type="submit" value="Share Geekery"></p>
+</form>
