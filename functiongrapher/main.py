@@ -7,10 +7,13 @@ from google.appengine.ext.webapp import template
 
 class MyHandler(webapp.RequestHandler):
 	def get(self, *groups):
-		values = { }
-		self.response.out.write(
-			template.render('main.html', values))
-		self.response.out.write('You accessed this page at the URL: /' + groups[0])
+                if groups[0] == 'the_image.svg':
+                        self.response.out.write(template.render('the_image.svg', {}))
+                else:
+                        values = {}
+                        self.response.out.write(
+                                template.render('main.html', values))
+                        self.response.out.write('You accessed this page at the URL: /' + groups[0])
 
 def main():
 	app = webapp.WSGIApplication([
