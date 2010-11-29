@@ -14,6 +14,8 @@ class MyHandler(webapp.RequestHandler):
                         self.response.out.write(
                                 template.render('main.html', values))
                         self.response.out.write('You accessed this page at the URL: /' + groups[0])
+			self.response.out.write(
+				template.render('footer.html', values))
 
 def main():
 	app = webapp.WSGIApplication([
