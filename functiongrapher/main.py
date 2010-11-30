@@ -9,6 +9,8 @@ class MyHandler(webapp.RequestHandler):
 	def get(self, *groups):
                 if groups[0] == 'the_image.svg':
                         self.response.out.write(template.render('the_image.svg', {}))
+		elif groups[0] == 'favicon.ico':
+			self.response.out.write(template.render('favicon.ico', {}))
                 else:
                         values = {}
                         self.response.out.write(
