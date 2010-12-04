@@ -13,7 +13,8 @@ class MyHandler(webapp.RequestHandler):
                 #         self.response.out.write(template.render('the_image.svg', {}))
                 elif groups[0] == '' or groups[0] == 'index.html':
 			self.response.headers['Content-Type'] = 'application/xhtml+xml'
-                        values = {}
+			function = self.request.get('f')
+                        values = { 'function' : function }
                         self.response.out.write(
                                 template.render('main.html', values))
                         self.response.out.write(
