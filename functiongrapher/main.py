@@ -11,7 +11,7 @@ class MyHandler(webapp.RequestHandler):
 			self.response.out.write(template.render('favicon.ico', {}))
                 # elif groups[0] == 'the_image.svg':
                 #         self.response.out.write(template.render('the_image.svg', {}))
-                else:
+                elif groups[0] == '' or groups[0] == 'index.html':
 			self.response.headers['Content-Type'] = 'application/xhtml+xml'
                         values = {}
                         self.response.out.write(
@@ -21,6 +21,10 @@ class MyHandler(webapp.RequestHandler):
                         self.response.out.write('<p>You accessed this page at the URL: /' + groups[0] + "</p>")
 			self.response.out.write(
 				template.render('footer.html', values))
+		else:
+			self.error(404)
+			self.response.out.write(
+				template.render('error.html', {}))
 
 def main():
 	app = webapp.WSGIApplication([
