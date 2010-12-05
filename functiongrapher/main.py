@@ -8,9 +8,7 @@ from google.appengine.ext.webapp import template
 
 class MyHandler(webapp.RequestHandler):
     def get(self, *groups):
-        if groups[0] == 'favicon.ico':
-            self.response.out.write(template.render('favicon.ico', {}))
-	elif groups[0] == '' or groups[0] == 'index.html':
+	if groups[0] == '' or groups[0] == 'index.html':
             self.response.headers['Content-Type'] = 'application/xhtml+xml'
 	    function = self.request.get('f')
 	    escaped_function = cgi.escape(function, True)
