@@ -1,5 +1,10 @@
+/* Overlay disclaimer on everything, light grey, huge, small caps */
+
+#disclaimer {position: absolute; top: 294px; color: #ccc; text-align: center; width: 716px; font-size: 72pt; font-variant: small-caps}
+
 /* Macro layout */
 
+/* Generate three columns of content in the main part of the page */
 #main {position: relative}
 #left {position: absolute; top:0; left:0}
 #right {position: absolute; top:0; right:0}
@@ -26,11 +31,16 @@ body {margin-right: 8px}      /* G */
 
 /* Micro layout */
 
+/* Top is centered */
 #top {text-align: center}
+/* Links on left are a list with no bullet points */
 ul {list-style-type: none; padding: 0}
+/* Main content is separated from top & bottom by horizontal lines */
 #main {border-top: 2px solid black; border-bottom: 2px solid black}
+/* Space out the form and graph vertically */
 form {margin: 16px 0}
 svg {margin-bottom: 16px}
+/* Copyright blurb is right justified */
 #bottom {text-align: right}
 
 /* Fonts */
@@ -41,3 +51,5 @@ html {font-family: helvetica, arial, sans-serif}
 #banner {font-family: palatino, "palatino linotype", serif}
 /* Ads not enabled yet, so mute the placeholder text */
 #right {font-variant: small-caps; color: grey}
+/* Copyright is grey, italic, and scripty */
+#bottom {color: grey; font-style: italic; font-family: palatino, "palatino linotype", serif}
