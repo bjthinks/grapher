@@ -39,8 +39,9 @@ ul {list-style-type: none; padding: 0}
 #main {border-top: 2px solid black; border-bottom: 2px solid black}
 /* Space out the form and graph vertically */
 svg {margin-bottom: 16px}
-/* Copyright blurb is right justified */
-#bottom {text-align: right}
+/* Copyright blurb is out of flow at top right of bottom div */
+#bottom {position: relative}
+#copyright {position: absolute; top:0; right:0; margin-top:0}
 
 /* Fonts */
 

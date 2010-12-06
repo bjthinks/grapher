@@ -12,5 +12,9 @@ handlers:
   static_files: style.css
   upload: style.css
 
+- url: /valid-xhtml11-mathml20-svg11-blue.png
+  static_files: valid-xhtml11-mathml20-svg11-blue.png
+  upload: valid-xhtml11-mathml20-svg11-blue.png
+
 - url: .*
   script: main.py
