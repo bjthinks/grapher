@@ -31,7 +31,7 @@ body {margin-right: 8px}      /* G */
 ul {list-style-type: none; padding: 0}
 #main {border-top: 2px solid black; border-bottom: 2px solid black}
 form {margin: 16px 0}
-svg {margin: 16px 0}
+svg {margin-bottom: 16px}
 
 /* Fonts */
 
