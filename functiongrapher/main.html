@@ -10,22 +10,24 @@
       <h1 id="banner">Function Grapher</h1>
       <p>Under Construction</p>
     </div>
-    <div id="left">
-      <ul>
-	<li>About</li>
-	<li>Graph</li>
-      </ul>
-    </div>
-    <div id="right">
-      <p>Ads go here</p>
-    </div>
-    <div id="center">
-      <p><form action="/" method="get">
-	  Please enter a function to graph: f(x) =
-	  <input type="text" name="f" value="{{ escaped_function }}"/>
-	  <input type="submit" value="Graph"/>
-      </form></p>
-      {{ svg_graph }}
+    <div id="main">
+      <div id="left">
+	<ul>
+	  <li>About</li>
+	  <li>Graph</li>
+	</ul>
+      </div>
+      <div id="right">
+	<p>Ads go here</p>
+      </div>
+      <div id="center">
+	<p><form action="/" method="get">
+	    Please enter a function to graph: f(x) =
+	    <input type="text" name="f" value="{{ escaped_function }}"/>
+	    <input type="submit" value="Graph"/>
+	</form></p>
+	{{ svg_graph }}
+      </div>
     </div>
     <div id="bottom">
       <p>You accessed this page at the URL: /{{ escaped_url }}</p>
