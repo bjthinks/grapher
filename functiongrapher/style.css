@@ -25,9 +25,13 @@ body {margin-left: 8px}       /* A */
 #right {width: 100px}         /* F */
 body {margin-right: 8px}      /* G */
 
-/* Alignment */
+/* Micro layout */
 
 #top {text-align: center}
+ul {list-style-type: none; padding: 0}
+#main {border-top: 2px solid black; border-bottom: 2px solid black}
+form {margin: 16px 0}
+svg {margin: 16px 0}
 
 /* Fonts */
 

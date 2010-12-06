@@ -21,11 +21,11 @@
 	<p>Ads go here</p>
       </div>
       <div id="center">
-	<p><form action="/" method="get">
-	    Please enter a function to graph: f(x) =
-	    <input type="text" name="f" value="{{ escaped_function }}"/>
-	    <input type="submit" value="Graph"/>
-	</form></p>
+	<form action="/" method="get">
+	  Please enter a function to graph:<br/>
+	  f(x) = <input type="text" name="f" value="{{ escaped_function }}"/>
+	  <input type="submit" value="Graph"/>
+	</form>
 	{{ svg_graph }}
       </div>
     </div>
