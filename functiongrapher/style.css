@@ -49,6 +49,8 @@ html {font-family: helvetica, arial, sans-serif}
 /* Different font for the banner */
 #banner {font-family: palatino, "palatino linotype", serif}
 /* Ads not enabled yet, so mute the placeholder text */
-#right {font-variant: small-caps; color: grey}
+/* Note that CSS officially spells grey as "gray" */
+#right {font-variant: small-caps; color: gray}
 /* Copyright is grey, italic, and scripty */
-#bottom {color: grey; font-style: italic; font-family: palatino, "palatino linotype", serif}
+/* Note that CSS officially spells grey as "gray" */
+#bottom {color: gray; font-style: italic; font-family: palatino, "palatino linotype", serif}
