@@ -25,23 +25,23 @@ class MyHandler(webapp.RequestHandler):
 
 def graph(function):
     output = '''\
-<svg xmlns="http://www.w3.org/2000/svg" width="500" height="500" version="1.1">
-  <g transform="translate(250,250) scale(1,-1)">
-    <line x1="-250" y1="0" x2="250" y2="0" stroke="black" stroke-width="2"/>
-    <line x1="-250" y1="0" x2="-240" y2="10" stroke="black" stroke-width="2"/>
-    <line x1="-250" y1="0" x2="-240" y2="-10" stroke="black" stroke-width="2"/>
-    <line x1="250" y1="0" x2="240" y2="10" stroke="black" stroke-width="2"/>
-    <line x1="250" y1="0" x2="240" y2="-10" stroke="black" stroke-width="2"/>
-    <line x1="0" y1="-250" x2="0" y2="250" stroke="black" stroke-width="2"/>
-    <line x1="0" y1="-250" x2="-10" y2="-240" stroke="black" stroke-width="2"/>
-    <line x1="0" y1="-250" x2="10" y2="-240" stroke="black" stroke-width="2"/>
-    <line x1="0" y1="250" x2="-10" y2="240" stroke="black" stroke-width="2"/>
-    <line x1="0" y1="250" x2="10" y2="240" stroke="black" stroke-width="2"/>
-    <g transform="scale(250)">
-      <line x1="-1" y1="-1" x2="1" y2="1" stroke="black" stroke-width=".004"/>
-    </g>
-  </g>
-</svg>'''
+<svg:svg version="1.1" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="500" height="500">
+  <svg:g transform="translate(250,250) scale(1,-1)">
+    <svg:line x1="-250" y1="0" x2="250" y2="0" stroke="black" stroke-width="2"/>
+    <svg:line x1="-250" y1="0" x2="-240" y2="10" stroke="black" stroke-width="2"/>
+    <svg:line x1="-250" y1="0" x2="-240" y2="-10" stroke="black" stroke-width="2"/>
+    <svg:line x1="250" y1="0" x2="240" y2="10" stroke="black" stroke-width="2"/>
+    <svg:line x1="250" y1="0" x2="240" y2="-10" stroke="black" stroke-width="2"/>
+    <svg:line x1="0" y1="-250" x2="0" y2="250" stroke="black" stroke-width="2"/>
+    <svg:line x1="0" y1="-250" x2="-10" y2="-240" stroke="black" stroke-width="2"/>
+    <svg:line x1="0" y1="-250" x2="10" y2="-240" stroke="black" stroke-width="2"/>
+    <svg:line x1="0" y1="250" x2="-10" y2="240" stroke="black" stroke-width="2"/>
+    <svg:line x1="0" y1="250" x2="10" y2="240" stroke="black" stroke-width="2"/>
+    <svg:g transform="scale(250)">
+      <svg:line x1="-1" y1="-1" x2="1" y2="1" stroke="black" stroke-width=".004"/>
+    </svg:g>
+  </svg:g>
+</svg:svg>'''
     return output
 
 def lorem_ipsum():

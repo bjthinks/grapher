@@ -38,7 +38,6 @@ ul {list-style-type: none; padding: 0}
 /* Main content is separated from top & bottom by horizontal lines */
 #main {border-top: 2px solid black; border-bottom: 2px solid black}
 /* Space out the form and graph vertically */
-form {margin: 16px 0}
 svg {margin-bottom: 16px}
 /* Copyright blurb is right justified */
 #bottom {text-align: right}
