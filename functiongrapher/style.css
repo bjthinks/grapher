@@ -1,1 +1,39 @@
+/* Macro layout */
+
+#left {float: left}
+#right {float: right}
+#bottom {clear: both}
+/* Minimum width calculation:
+   W = 732 = A + B + C + D + E + F + G
+   A =   8 = body margin left
+   B = 100 = #left width
+   C =   8 = #left margin right
+   D = 500 = #center min width
+   E =   8 = #right margin left
+   F = 100 = #right width
+   G =   8 = body margin right
+ */
+html {min-width: 732px}       /* W */
+body {min-width: 716px}       /* W - (A + G) */
+body {margin-left: 8px}       /* A */
+#left {width: 100px}          /* B */
+#left {margin-right: 8px}     /* C */
+#center {margin-left: 108px}  /* B + C */
+		      	      /* D is implicitly 500 */
+#center {margin-right: 108px} /* E + F */
+#right {margin-left: 8px}     /* E */
+#right {width: 100px}         /* F */
+body {margin-right: 8px}      /* G */
+
+/* Alignment */
+
+#top {text-align: center}
+
+/* Fonts */
+
+/* Default font for the whole page */
 html {font-family: helvetica, arial, sans-serif}
+/* Different font for the banner */
+#banner {font-family: palatino, "palatino linotype", serif}
+/* Ads not enabled yet, so mute the placeholder text */
+#right {font-variant: small-caps; color: grey}
