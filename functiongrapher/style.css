@@ -1,7 +1,8 @@
 /* Macro layout */
 
-#left {float: left}
-#right {float: right}
+#main {position: relative}
+#left {position: absolute; top:0; left:0}
+#right {position: absolute; top:0; right:0}
 #bottom {clear: both}
 /* Minimum width calculation:
    W = 732 = A + B + C + D + E + F + G
@@ -30,6 +31,7 @@ ul {list-style-type: none; padding: 0}
 #main {border-top: 2px solid black; border-bottom: 2px solid black}
 form {margin: 16px 0}
 svg {margin-bottom: 16px}
+#bottom {text-align: right}
 
 /* Fonts */
 

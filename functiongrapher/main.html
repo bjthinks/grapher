@@ -11,6 +11,14 @@
       <p>Under Construction</p>
     </div>
     <div id="main">
+      <div id="center">
+	<form action="/" method="get">
+	  Please enter a function to graph:<br/>
+	  f(x) = <input type="text" name="f" value="{{ escaped_function }}"/>
+	  <input type="submit" value="Graph"/>
+	</form>
+	{{ svg_graph }}
+      </div>
       <div id="left">
 	<ul>
 	  <li>About</li>
@@ -20,17 +28,9 @@
       <div id="right">
 	<p>Ads go here</p>
       </div>
-      <div id="center">
-	<form action="/" method="get">
-	  Please enter a function to graph:<br/>
-	  f(x) = <input type="text" name="f" value="{{ escaped_function }}"/>
-	  <input type="submit" value="Graph"/>
-	</form>
-	{{ svg_graph }}
-      </div>
     </div>
     <div id="bottom">
-      <p>You accessed this page at the URL: /{{ escaped_url }}</p>
+      <p>Copyright 2010 Paul Berry and Brian Johnson</p>
     </div>
   </body>
 </html>
