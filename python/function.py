@@ -17,6 +17,10 @@ class Function(object):
     def derivative(self):
         pass
 
+    def polynomial_degree(self):
+        """Return the degree of the polynomial, or None if not a polynomial."""
+        return None
+
     @abc.abstractmethod
     def weak_simplify(self):
         """Perform "weak simplifications", meaning simplifications
@@ -154,6 +158,9 @@ class _ErrorFunction(Function):
     def derivative(self):
         return self
 
+    def polynomial_degree(self):
+        return None
+
     def weak_simplify(self):
         return self
 
@@ -177,6 +184,9 @@ class _ConstantFunction(Function):
     def derivative(self):
         return self.constant(0)
 
+    def polynomial_degree(self):
+        return 0
+
     def weak_simplify(self):
         return self
 
@@ -193,6 +203,9 @@ class _IdentityFunction(Function):
 
     def derivative(self):
         return self.constant(1)
+
+    def polynomial_degree(self):
+        return 1
 
     def weak_simplify(self):
         return self
@@ -216,6 +229,13 @@ class _SumFunction(Function):
 
     def derivative(self):
         return Function.sum(*[f.derivative() for f in self._terms])
+
+    def polynomial_degree(self):
+        summand_degrees = [ term.polynomial_degree() for term in self._terms ]
+        if None in summand_degrees:
+            return None
+        else:
+            return max(summand_degrees)
 
     def weak_simplify(self):
         return Function.sum(*[f.weak_simplify() for f in self._terms])
@@ -250,6 +270,13 @@ class _ProductFunction(Function):
                        else self._terms[j])
                       for j in term_range])
               for i in term_range])
+
+    def polynomial_degree(self):
+        summand_degrees = [ term.polynomial_degree() for term in self._terms ]
+        if None in summand_degrees:
+            return None
+        else:
+            return sum(summand_degrees)
 
     def weak_simplify(self):
         result = Function.product(*[f.weak_simplify() for f in self._terms])
@@ -286,6 +313,12 @@ class _QuotientFunction(Function):
                                  Function.power(self.__g,
                                                 Function.constant(2)))
 
+    def polynomial_degree(self):
+        if isinstance(self.__g, _ConstantFunction):
+            return self.__f.polynomial_degree()
+        else:
+            return None
+
     def weak_simplify(self):
         f = self.__f.weak_simplify()
         g = self.__g.weak_simplify()
@@ -321,7 +354,19 @@ class _PowerFunction(Function):
             Function.product(Function.power(
                     self._f, Function.sum(self._g, Function.constant(-1))),
                              Function.product(self._g, self._f.derivative())))
-    
+
+    def polynomial_degree(self):
+        base_degree = self._f.polynomial_degree()
+        if base_degree == None:
+            return None
+        if not isinstance(self._g, _ConstantFunction):
+            return None
+        exponent = self._g._k
+        if exponent % 1 == 0 and exponent >= 0:
+            return base_degree * exponent
+        else:
+            return None
+
     def weak_simplify(self):
         f = self._f.weak_simplify()
         g = self._g.weak_simplify()
@@ -462,6 +507,7 @@ class _FunctionUnitTests(unittest.TestCase):
         self.assertEqual(str(Function.constant(3)), '3')
         self.assertEqual(repr(Function.constant(3)), 'Function.constant(3)')
         self.assertEqual(Function.constant(5).derivative()(3.67), 0)
+        self.assertEqual(Function.constant(17).polynomial_degree(), 0)
 
     def test_identity(self):
         for val in xrange(5):
@@ -473,6 +519,7 @@ class _FunctionUnitTests(unittest.TestCase):
         self.assertEqual(Function.identity().derivative()(6), 1)
         self.numericalDerivativeTest(Function.identity())
         self.assertEqual(str(Function.identity().weak_simplify()), 'x')
+        self.assertEqual(Function.identity().polynomial_degree(), 1)
 
     def test_sum(self):
         for val in xrange(5):
@@ -524,6 +571,12 @@ class _FunctionUnitTests(unittest.TestCase):
         # (x + 1) + 1 = 2 + x
         self.assertEqual(str(Function.sum(Function.sum(x, c(1)), c(1))),
                          '(2 + x)')
+        self.assertEqual(Function.sum(Function.constant(3),
+                                      Function.identity()).polynomial_degree(), 1)
+        self.assertEqual(Function.sum(Function.constant(3),
+                                      Function.product(Function.identity(),
+                                                       Function.identity()))
+                         .polynomial_degree(), 2)
 
     def test_product(self):
         for val in xrange(5):
@@ -586,6 +639,11 @@ class _FunctionUnitTests(unittest.TestCase):
         self.assertEqual(str(prod(x, pow(x, c(0))).weak_simplify()), 'x')
         # (x*2)*3 = 6*x
         self.assertEqual(str(prod(prod(x, c(2)), c(3))), '(6 * x)')
+        self.assertEqual(Function.product(Function.identity(),
+                                          Function.identity(),
+                                          Function.power(Function.identity(),
+                                                         Function.constant(2)))
+                         .polynomial_degree(), 4)
 
     def test_quotient(self):
         for v in xrange(5):
@@ -627,6 +685,12 @@ class _FunctionUnitTests(unittest.TestCase):
         # 1/(x + x*0) = 1/x
         f = Function.quotient(c(1), plus(x, prod(x, c(0))))
         self.assertEqual(str(f.weak_simplify()), '(1 / x)')
+        self.assertEqual(Function.quotient(Function.identity(),
+                                           Function.identity()).polynomial_degree(), None)
+        self.assertEqual(Function.quotient(Function.identity(),
+                                           Function.constant(3)).polynomial_degree(), 1)
+        self.assertEqual(Function.quotient(Function.constant(7),
+                                           Function.constant(3)).polynomial_degree(), 0)
 
     def test_power(self):
         for val in xrange(5):
@@ -706,6 +770,10 @@ class _FunctionUnitTests(unittest.TestCase):
         # (2 + 0*x)^3 = 8
         f = Function.power(sum(c(2), prod(c(0), x)), c(3))
         self.assertEqual(str(f.weak_simplify()), '8')
+        self.assertEqual(Function.power(Function.identity(), Function.constant(7))
+                         .polynomial_degree(), 7)
+        self.assertEqual(Function.power(Function.constant(2), Function.identity())
+                         .polynomial_degree(), None)
 
     def test_power_consts(self):
         # Test that power operates correctly when raising a const to a
@@ -723,6 +791,8 @@ class _FunctionUnitTests(unittest.TestCase):
                 else:
                     self.assertTrue(isinstance(f, _ConstantFunction))
                     self.assertEqual(f._k, z)
+        self.assertEqual(Function.power(Function.constant(2), Function.constant(2))
+                         .polynomial_degree(), 0)
 
     def test_natural_log(self):
         for val in xrange(1, 5):
@@ -754,6 +824,7 @@ class _FunctionUnitTests(unittest.TestCase):
         # ln (x + x*0) = ln x
         f = Function.log(sum(x, prod(x, c(0))))
         self.assertEqual(str(f.weak_simplify()), 'ln(x)')
+        self.assertEqual(Function.log(Function.identity()).polynomial_degree(), None)
 
     def test_sine(self):
         for val in xrange(1, 5):
@@ -782,6 +853,7 @@ class _FunctionUnitTests(unittest.TestCase):
         # sin (x + x*0) = sin x
         f = Function.sin(sum(x, prod(x, c(0))))
         self.assertEqual(str(f.weak_simplify()), 'sin(x)')
+        self.assertEqual(Function.sin(Function.identity()).polynomial_degree(), None)
 
     def test_cosine(self):
         for val in xrange(1, 5):
@@ -810,6 +882,7 @@ class _FunctionUnitTests(unittest.TestCase):
         # cos (x + x*0) = cos x
         f = Function.cos(sum(x, prod(x, c(0))))
         self.assertEqual(str(f.weak_simplify()), 'cos(x)')
+        self.assertEqual(Function.cos(Function.identity()).polynomial_degree(), None)
 
 if __name__ == '__main__':
     unittest.main()
