@@ -1,6 +1,6 @@
 /* Overlay disclaimer on everything, light grey, huge, small caps */
 
-#disclaimer {position: absolute; top: 294px; color: #ccc; text-align: center; width: 716px; font-size: 72pt; font-variant: small-caps}
+#disclaimer {position: absolute; top: 294px; color: #ccc; text-align: center; width: 716px; font-size: 72pt; font-variant: small-caps; margin-left: auto; margin-right: auto; left: 0; right: 0}
 
 /* Macro layout */
 
@@ -23,9 +23,9 @@ html {min-width: 732px}       /* W */
 body {min-width: 716px}       /* W - (A + G) */
 body {margin-left: 8px}       /* A */
 #left {width: 100px}          /* B */
-#center {margin-left: 108px}  /* B + C */
-		      	      /* D is implicitly 500 */
-#center {margin-right: 108px} /* E + F */
+#center {margin-left: auto}   /* C is implicily 8 */
+#center {width: 500px}        /* D */
+#center {margin-right: auto}  /* E is implicitly 8 */
 #right {width: 100px}         /* F */
 body {margin-right: 8px}      /* G */
 
