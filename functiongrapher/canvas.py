@@ -17,6 +17,11 @@ class Canvas(object):
         self.__lines.append((x1,y1,x2,y2))
         return self
 
+    def lines(self, linelist):
+        for line in linelist:
+            self.line(line[0], line[1], line[2], line[3])
+        return self
+
     def output(self):
         # someone has been writing TOO MUCH Haskell...
         return ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="' + str(self.__xsize) + '" height="' + str(self.__ysize) + '">'] + \
@@ -55,6 +60,13 @@ class canvasTest(unittest.TestCase):
                           '<svg:line x1="250.0" y1="250.0" x2="375.0" y2="125.0" stroke="black" stroke-width="1"/>',
                           '</svg:svg>'])
         self.assertEqual(Canvas().line(-1,1,2,2).line(-2,-2,2,0).output(),
+                         ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="500" height="500">',
+                          '<svg:line x1="125.0" y1="125.0" x2="500.0" y2="0.0" stroke="black" stroke-width="1"/>',
+                          '<svg:line x1="0.0" y1="500.0" x2="500.0" y2="250.0" stroke="black" stroke-width="1"/>',
+                          '</svg:svg>'])
+
+    def test_lines(self):
+        self.assertEqual(Canvas().lines([(-1,1,2,2),(-2,-2,2,0)]).output(),
                          ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="500" height="500">',
                           '<svg:line x1="125.0" y1="125.0" x2="500.0" y2="0.0" stroke="black" stroke-width="1"/>',
                           '<svg:line x1="0.0" y1="500.0" x2="500.0" y2="250.0" stroke="black" stroke-width="1"/>',
