@@ -35,9 +35,11 @@ class canvasTest(unittest.TestCase):
     def test_create(self):
         Canvas()
         Canvas(xsize=345, ysize=654)
+        Canvas(345, 654)
         Canvas(xmin=2, xmax=4)
         Canvas(ymin=2, ymax=4)
         Canvas(xsize=456, ysize=567, xmin=-6, xmax=83, ymin=2, ymax=4)
+        Canvas(456, 567, -6, 83, 2, 4)
 
     def test_empty(self):
         self.assertEqual(Canvas().output(),
@@ -48,9 +50,14 @@ class canvasTest(unittest.TestCase):
                           '</svg:svg>'])
 
     def test_line(self):
-        self.assertEqual(Canvas().line(x1=0,y1=0,x2=1,y2=1).output(),
+        self.assertEqual(Canvas().line(0,0,1,1).output(),
                          ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="500" height="500">',
                           '<svg:line x1="250.0" y1="250.0" x2="375.0" y2="125.0" stroke="black" stroke-width="1"/>',
+                          '</svg:svg>'])
+        self.assertEqual(Canvas().line(-1,1,2,2).line(-2,-2,2,0).output(),
+                         ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="500" height="500">',
+                          '<svg:line x1="125.0" y1="125.0" x2="500.0" y2="0.0" stroke="black" stroke-width="1"/>',
+                          '<svg:line x1="0.0" y1="500.0" x2="500.0" y2="250.0" stroke="black" stroke-width="1"/>',
                           '</svg:svg>'])
 
 
