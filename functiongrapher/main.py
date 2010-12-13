@@ -5,6 +5,7 @@ import cgi
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
+from canvas import Canvas
 
 class MyHandler(webapp.RequestHandler):
     def get(self, *groups):
@@ -24,25 +25,8 @@ class MyHandler(webapp.RequestHandler):
 		    template.render('error.html', {}))
 
 def graph(function):
-    output = '''\
-<svg:svg version="1.1" xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="500" height="500">
-  <svg:g transform="translate(250,250) scale(1,-1)">
-    <svg:line x1="-250" y1="0" x2="250" y2="0" stroke="black" stroke-width="2"/>
-    <svg:line x1="-250" y1="0" x2="-240" y2="10" stroke="black" stroke-width="2"/>
-    <svg:line x1="-250" y1="0" x2="-240" y2="-10" stroke="black" stroke-width="2"/>
-    <svg:line x1="250" y1="0" x2="240" y2="10" stroke="black" stroke-width="2"/>
-    <svg:line x1="250" y1="0" x2="240" y2="-10" stroke="black" stroke-width="2"/>
-    <svg:line x1="0" y1="-250" x2="0" y2="250" stroke="black" stroke-width="2"/>
-    <svg:line x1="0" y1="-250" x2="-10" y2="-240" stroke="black" stroke-width="2"/>
-    <svg:line x1="0" y1="-250" x2="10" y2="-240" stroke="black" stroke-width="2"/>
-    <svg:line x1="0" y1="250" x2="-10" y2="240" stroke="black" stroke-width="2"/>
-    <svg:line x1="0" y1="250" x2="10" y2="240" stroke="black" stroke-width="2"/>
-    <svg:g transform="scale(250)">
-      <svg:line x1="-1" y1="-1" x2="1" y2="1" stroke="black" stroke-width=".004"/>
-    </svg:g>
-  </svg:g>
-</svg:svg>'''
-    return output
+    linelist = [(-2,0,2,0), (-2,0,-1.92,.08), (-2,0,-1.92,-.08), (2,0,1.92,.08), (2,0,1.92,-0.08), (0,-2,0,2), (0,-2,-.08,-1.92), (0,-2,.08,-1.92), (0,2,-.08,1.92), (0,2,.08,1.92), (-2,-2,2,2)]
+    return "\n".join(Canvas().lines(linelist).output())
 
 def lorem_ipsum():
     return '''<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque libero tellus, condimentum a tempus vel, placerat ut orci. Suspendisse potenti. Ut aliquam aliquet tincidunt. Mauris sit amet nulla tristique dolor convallis faucibus quis eget mauris. Vestibulum facilisis, urna quis viverra sodales, ante sem dapibus metus, ut aliquam diam tortor eu tellus. Sed at ipsum id augue porta tempor. Mauris ornare, urna sit amet luctus adipiscing, sapien massa pretium enim, et congue nibh diam aliquet elit. Sed arcu libero, pellentesque ac iaculis sed, mattis non justo. Nulla mauris ligula, bibendum id tincidunt in, vulputate ut mi. Aenean malesuada placerat turpis et sollicitudin. Nulla rhoncus magna vel turpis eleifend eget tristique erat volutpat. Nunc sapien nunc, interdum ac dictum ac, eleifend nec diam. Nunc fringilla aliquam congue. Curabitur bibendum tellus in est vulputate sed cursus massa iaculis.</p>
