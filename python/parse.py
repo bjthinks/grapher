@@ -52,7 +52,10 @@ class Parse(object):
         return result
 
     def go(self):
-        return self.expression(0)
+        result = self.expression(0)
+        if self.peek().type != 'eof':
+            raise ParseError()
+        return result
 
 class _ParseUnitTests(unittest.TestCase):
     def matches(self, input_str, desired_function):
@@ -112,6 +115,7 @@ class _ParseUnitTests(unittest.TestCase):
         self.errors('1*')
         self.errors('*1')
         self.errors('**')
+        self.errors('1 1')
 
 if __name__ == '__main__':
     unittest.main()
