@@ -32,9 +32,13 @@ class Parse(object):
 
     def go(self):
         result = self.atom()
-        if self.peek().type == 'symbol' and self.peek().datum == '+':
-            self.consume()
-            result = Function.sum(result, self.atom())
+        if self.peek().type == 'symbol':
+            if self.peek().datum == '+':
+                self.consume()
+                result = Function.sum(result, self.atom())
+            elif self.peek().datum == '*':
+                self.consume()
+                result = Function.product(result, self.atom())
         return result
 
 class _ParseUnitTests(unittest.TestCase):
@@ -47,7 +51,9 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('1', Function.constant(1.0))
         self.matches('4', Function.constant(4.0))
         self.matches('x+17', Function.sum(Function.identity(),
-                                         Function.constant(17.0)))
+                                          Function.constant(17.0)))
+        self.matches('17*x', Function.product(Function.constant(17.0),
+                                              Function.identity()))
 
 
 if __name__ == '__main__':
