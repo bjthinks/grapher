@@ -24,7 +24,7 @@ class Parse(object):
         self.pos += 1
         return result
 
-    def atom(self):
+    def atom(self, allow_unary_minus):
         if self.peek().type == 'variable':
             # It must be an x, who uses other letters anyway?
             self.consume()
@@ -39,10 +39,11 @@ class Parse(object):
                     raise ParseError()
                 self.consume()
                 return result
-            elif self.peek().datum == '-':
+            elif self.peek().datum == '-' and allow_unary_minus:
                 self.consume()
                 # TODO: -x^2
-                return Function.product(Function.constant(-1.0), self.atom())
+                return Function.product(Function.constant(-1.0),
+                                        self.atom(False))
         raise ParseError()
 
     def expression(self, precedence):
@@ -50,7 +51,7 @@ class Parse(object):
         # 0 => never stop
         # 1 => stop on +
         # 2 => stop on *
-        result = self.atom()
+        result = self.atom(True)
         while self.peek().type == 'symbol':
             if precedence < 1 and self.peek().datum == '+':
                 self.consume()
@@ -172,6 +173,7 @@ class _ParseUnitTests(unittest.TestCase):
         self.errors('*1')
         self.errors('**')
         self.errors('1 1')
+        self.errors('--1')
 
 if __name__ == '__main__':
     unittest.main()
