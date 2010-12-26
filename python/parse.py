@@ -51,6 +51,11 @@ class Parse(object):
             if precedence < 1 and self.peek().datum == '+':
                 self.consume()
                 result = Function.sum(result, self.expression(1))
+            elif precedence < 1 and self.peek().datum == '-':
+                self.consume()
+                result = Function.sum(
+                    result, Function.product(
+                        Function.constant(-1.0), self.expression(1)))
             elif precedence < 2 and self.peek().datum == '*':
                 self.consume()
                 result = Function.product(result, self.expression(2))
@@ -87,6 +92,8 @@ class _ParseUnitTests(unittest.TestCase):
         s = Function.sum
         p = Function.product
         q = Function.quotient
+        def d(arg1, arg2):
+            return s(arg1, p(c(-1), arg2))
 
         self.matches('x+17', s(x, c(17)))
         self.matches('x+x', s(x, x))
@@ -105,6 +112,8 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('(x)', x)
 
         self.matches('x/2', q(x, c(2)))
+
+        self.matches('x-2', d(x, c(2)))
 
     def test_precedence(self):
         x = Function.identity()
