@@ -118,6 +118,14 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('x*x*x+x*x+x+3+x*x*x*x',
                      s(s(s(s(p(p(x,x),x), p(x,x)), x), c(3)),
                        p(p(p(x,x),x),x)))
+        self.matches('2*(x+3)', p(c(2), s(x, c(3))))
+        self.matches('2*(x+x)', p(c(2), s(x, x)))
+        self.matches('x*(x+3)', p(x, s(x, c(3))))
+        self.matches('x*(x+x)', p(x, s(x, x)))
+        self.matches('(3+2)*x', p(s(c(3), c(2)), x))
+        self.matches('(x+2)*x', p(s(x, c(2)), x))
+        self.matches('(3+x)*x', p(s(c(3), x), x))
+        self.matches('(x+x)*x', p(s(x, x), x))
 
     def test_errors(self):
         self.errors('1+')
