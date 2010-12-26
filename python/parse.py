@@ -106,6 +106,12 @@ class _ParseUnitTests(unittest.TestCase):
 
     def test_errors(self):
         self.errors('1+')
+        self.errors('+1')
+        self.errors('++')
+        self.errors('')
+        self.errors('1*')
+        self.errors('*1')
+        self.errors('**')
 
 if __name__ == '__main__':
     unittest.main()
