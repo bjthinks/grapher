@@ -112,6 +112,7 @@ class _ParseUnitTests(unittest.TestCase):
             return Function.constant(float(value))
         s = Function.sum
         p = Function.product
+        q = Function.quotient
 
         self.matches('2*x+3', s(p(c(2), x), c(3)))
         self.matches('2*x+x', s(p(c(2), x), x))
@@ -132,6 +133,11 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('(x+2)*x', p(s(x, c(2)), x))
         self.matches('(3+x)*x', p(s(c(3), x), x))
         self.matches('(x+x)*x', p(s(x, x), x))
+        self.matches('x*x/2', q(p(x, x), c(2)))
+        self.matches('x+x/2', s(x, q(x, c(2))))
+        self.matches('x/2*x', p(q(x, c(2)), x))
+        self.matches('x/(2*x)', q(x, p(c(2), x)))
+        self.matches('x/2/2', q(q(x, c(2)), c(2)))
 
     def test_errors(self):
         self.errors('1+')
