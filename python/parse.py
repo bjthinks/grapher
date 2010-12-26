@@ -12,9 +12,12 @@ class Parse(object):
 
 
 class _ParseUnitTests(unittest.TestCase):
+    def matches(self, input_str, desired_function):
+        self.assertEqual(str(Parse(tokenize(input_str)).go()),
+                         str(desired_function))
+
     def test_basic_functions(self):
-        self.assertEqual(str(Parse([Token('variable', 'x')]).go()),
-                         str(Function.identity()))
+        self.matches('x', Function.identity())
 
 
 if __name__ == '__main__':
