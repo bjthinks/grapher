@@ -106,6 +106,9 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('x+2*x', s(x, p(c(2), x)))
         self.matches('3+x*x', s(c(3), p(x, x)))
         self.matches('x+x*x', s(x, p(x, x)))
+        self.matches('x*x*x+x*x+x+3+x*x*x*x',
+                     s(s(s(s(p(p(x,x),x), p(x,x)), x), c(3)),
+                       p(p(p(x,x),x),x)))
 
     def test_errors(self):
         self.errors('1+')
