@@ -31,15 +31,19 @@ class Parse(object):
             return Function.identity()
         elif self.peek().type == 'number':
             return Function.constant(self.consume().datum)
-        elif self.peek().type == 'symbol' and self.peek().datum == '(':
-            self.consume()
-            result = self.expression(0)
-            if self.peek().type != 'symbol' or self.peek().datum != ')':
-                raise ParseError()
-            self.consume()
-            return result
-        else:
-            raise ParseError()
+        elif self.peek().type == 'symbol':
+            if self.peek().datum == '(':
+                self.consume()
+                result = self.expression(0)
+                if self.peek().type != 'symbol' or self.peek().datum != ')':
+                    raise ParseError()
+                self.consume()
+                return result
+            elif self.peek().datum == '-':
+                self.consume()
+                # TODO: -x^2
+                return Function.product(Function.constant(-1.0), self.atom())
+        raise ParseError()
 
     def expression(self, precedence):
         # precedence tells when to stop.
@@ -114,6 +118,8 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('x/2', q(x, c(2)))
 
         self.matches('x-2', d(x, c(2)))
+
+        self.matches('-x', p(c(-1), x))
 
     def test_precedence(self):
         x = Function.identity()
