@@ -31,6 +31,13 @@ class Parse(object):
             return Function.identity()
         elif self.peek().type == 'number':
             return Function.constant(self.consume().datum)
+        elif self.peek().type == 'symbol' and self.peek().datum == '(':
+            self.consume()
+            result = self.expression(0)
+            if self.peek().type != 'symbol' or self.peek().datum != ')':
+                raise ParseError()
+            self.consume()
+            return result
         else:
             raise ParseError()
 
@@ -90,6 +97,8 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('2*x*x', p(p(c(2), x), x))
         self.matches('x*2*x', p(p(x, c(2)), x))
         self.matches('x*x*2', p(p(x, x), c(2)))
+
+        self.matches('(x)', x)
 
     def test_precedence(self):
         x = Function.identity()
