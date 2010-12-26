@@ -32,7 +32,7 @@ class Parse(object):
 
     def go(self):
         result = self.atom()
-        if self.peek().type == 'symbol':
+        while self.peek().type == 'symbol':
             if self.peek().datum == '+':
                 self.consume()
                 result = Function.sum(result, self.atom())
@@ -50,10 +50,19 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('x', Function.identity())
         self.matches('1', Function.constant(1.0))
         self.matches('4', Function.constant(4.0))
-        self.matches('x+17', Function.sum(Function.identity(),
-                                          Function.constant(17.0)))
-        self.matches('17*x', Function.product(Function.constant(17.0),
-                                              Function.identity()))
+
+    def test_basic_operators(self):
+        x = Function.identity()
+        def c(value):
+            return Function.constant(float(value))
+        s = Function.sum
+        p = Function.product
+
+        self.matches('x+17', s(x, c(17)))
+        self.matches('17*x', p(c(17), x))
+        self.matches('x*x', p(x, x))
+        self.matches('x*x', p(x, x))
+        self.matches('x*x*x', p(p(x, x), x))
 
 
 if __name__ == '__main__':
