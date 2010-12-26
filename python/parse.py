@@ -114,12 +114,14 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('x*x*2', p(p(x, x), c(2)))
 
         self.matches('(x)', x)
+        self.matches('(1)', c(1))
 
         self.matches('x/2', q(x, c(2)))
 
         self.matches('x-2', d(x, c(2)))
 
         self.matches('-x', p(c(-1), x))
+        self.matches('-2', p(c(-1), c(2)))
 
     def test_precedence(self):
         x = Function.identity()
