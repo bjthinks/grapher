@@ -45,6 +45,11 @@ class Parse(object):
                 # TODO: -x^2
                 return Function.product(Function.constant(-1.0),
                                         self.expression(2, False))
+        elif self.peek().type == 'function':
+            if self.peek().datum != 'sin': # heh heh
+                raise ParseError()
+            self.consume()
+            return Function.sin(self.atom(False))
         raise ParseError()
 
     def expression(self, precedence, allow_unary_minus = True):
@@ -106,6 +111,7 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('x', Function.identity())
         self.matches('1', Function.constant(1.0))
         self.matches('4', Function.constant(4.0))
+        self.matches('sin x', Function.sin(Function.identity()))
 
     def test_basic_operators(self):
         x = Function.identity()
