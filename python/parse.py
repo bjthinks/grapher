@@ -4,6 +4,7 @@ import unittest
 
 
 ONE = Function.constant(1.0)
+ONE_OVER_LOG_TEN = Function.constant(1.0/log(10.0))
 KNOWN_FUNCTIONS = {
     'sin': Function.sin,
     'cos': Function.cos,
@@ -11,6 +12,8 @@ KNOWN_FUNCTIONS = {
     'cot': lambda x: Function.quotient(Function.cos(x), Function.sin(x)),
     'sec': lambda x: Function.quotient(ONE, Function.cos(x)),
     'csc': lambda x: Function.quotient(ONE, Function.sin(x)),
+    'ln': Function.log,
+    'log': lambda x: Function.product(ONE_OVER_LOG_TEN, Function.log(x)),
     }
 
 
@@ -134,6 +137,9 @@ class _ParseUnitTests(unittest.TestCase):
                                                 Function.sin(x)))
         self.matches('sec x', Function.quotient(c(1), Function.cos(x)))
         self.matches('csc x', Function.quotient(c(1), Function.sin(x)))
+        self.matches('ln x', Function.log(x))
+        self.matches('log x', Function.product(c(1.0/log(10.0)),
+                                               Function.log(x)))
 
     def test_basic_operators(self):
         x = Function.identity()
