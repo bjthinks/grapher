@@ -123,6 +123,7 @@ class _ParseUnitTests(unittest.TestCase):
 
         self.matches('-x', p(c(-1), x))
         self.matches('-2', p(c(-1), c(2)))
+        self.matches('-(-2)', p(c(-1), p(c(-1), c(2))))
 
     def test_precedence(self):
         x = Function.identity()
@@ -163,6 +164,11 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('x-x-2', d(d(x, x), c(2)))
         self.matches('x*x-2', d(p(x, x), c(2)))
         self.matches('x-x*2', d(x, p(x, c(2))))
+        self.matches('x--2', d(x, c(-2)))
+        self.matches('-x-2', d(p(c(-1), x), c(2)))
+        self.matches('-x--2', d(p(c(-1), x), c(-2)))
+        self.matches('-x*x/-3-x/5+-4', s(d(q(p(p(c(-1), x), x), c(-3)),
+                                           q(x, c(5))), c(-4)))
 
     def test_errors(self):
         self.errors('1+')
