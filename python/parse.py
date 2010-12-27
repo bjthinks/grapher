@@ -58,7 +58,9 @@ class Parse(object):
             if is_symbol and precedence < 1 and self.peek().datum == '+':
                 self.consume()
                 result = Function.sum(result, self.expression(1))
-            elif is_symbol and precedence < 1 and self.peek().datum == '-':
+            elif is_symbol and self.peek().datum == '-':
+                if precedence >= 1:
+                    break
                 self.consume()
                 result = Function.sum(
                     result, Function.product(
@@ -76,8 +78,7 @@ class Parse(object):
                 # Paul doesn't like this
                 old_pos = self.pos
                 try:
-                    result = Function.product(
-                        result, self.expression(2, False))
+                    result = Function.product(result, self.expression(2))
                 except ParseError:
                     self.pos = old_pos
                     break
