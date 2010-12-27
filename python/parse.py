@@ -3,6 +3,12 @@ from function import *
 import unittest
 
 
+KNOWN_FUNCTIONS = {
+    'sin': Function.sin,
+    'cos': Function.cos,
+    }
+
+
 class ParseError(Exception):
     pass
 
@@ -46,10 +52,11 @@ class Parse(object):
                 return Function.product(Function.constant(-1.0),
                                         self.expression(2, False))
         elif self.peek().type == 'function':
-            if self.peek().datum != 'sin': # heh heh
+            function_name = self.peek().datum
+            if function_name not in KNOWN_FUNCTIONS:
                 raise ParseError()
             self.consume()
-            return Function.sin(self.atom(False))
+            return KNOWN_FUNCTIONS[function_name](self.atom(False))
         raise ParseError()
 
     def expression(self, precedence, allow_unary_minus = True):
@@ -112,6 +119,7 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('1', Function.constant(1.0))
         self.matches('4', Function.constant(4.0))
         self.matches('sin x', Function.sin(Function.identity()))
+        self.matches('cos x', Function.cos(Function.identity()))
 
     def test_basic_operators(self):
         x = Function.identity()
