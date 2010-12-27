@@ -261,6 +261,10 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('sin x^x', sin(e(x, x)))
         self.matches('sin -x', sin(p(c(-1), x)))
         self.matches('sin 2x', sin(p(c(2), x)))
+        self.matches('sin x*x', p(sin(x), x))
+        self.matches('sin x/x', q(sin(x), x))
+        self.matches('sin x+x', s(sin(x), x))
+        self.matches('sin x-x', d(sin(x), x))
 
     def test_errors(self):
         self.errors('y')
