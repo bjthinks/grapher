@@ -51,7 +51,8 @@ class Parse(object):
         # 0 => never stop
         # 1 => stop on +
         # 2 => stop on *
-        # 3 => stop on ^, juxtaposition
+        # 3 => stop on juxtaposition
+        # 4 => stop on ^
         result = self.atom(allow_unary_minus)
         while True:
             is_symbol = (self.peek().type == 'symbol')
@@ -71,17 +72,19 @@ class Parse(object):
             elif is_symbol and precedence < 2 and self.peek().datum == '/':
                 self.consume()
                 result = Function.quotient(result, self.expression(2))
-            elif is_symbol and precedence < 3 and self.peek().datum == '^':
+            elif is_symbol and precedence < 4 and self.peek().datum == '^':
                 self.consume()
-                result = Function.power(result, self.expression(2))
-            else:
+                result = Function.power(result, self.expression(3))
+            elif precedence < 3:
                 # Paul doesn't like this
                 old_pos = self.pos
                 try:
-                    result = Function.product(result, self.expression(2))
+                    result = Function.product(result, self.expression(3))
                 except ParseError:
                     self.pos = old_pos
                     break
+            else:
+                break
         return result
 
     def go(self):
@@ -207,8 +210,10 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('x/x x', q(x, p(x, x)))
         self.matches('2 x/x', q(p(c(2), x), x))
         self.matches('x/2 x', q(x, p(c(2), x)))
-        self.matches('x^x x', e(x, p(x, x)))
+        self.matches('x^x x', p(e(x, x), x))
+        self.matches('x^2 x', p(e(x, c(2)), x))
         self.matches('x x^x', p(x, e(x, x)))
+        self.matches('x^2 x^3', p(e(x, c(2)), e(x,c(3))))
 
     def test_errors(self):
         self.errors('1+')
