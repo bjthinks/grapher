@@ -26,7 +26,8 @@ class Parse(object):
 
     def atom(self, allow_unary_minus):
         if self.peek().type == 'variable':
-            # It must be an x, who uses other letters anyway?
+            if self.peek().datum != 'x':
+                raise ParseError()
             self.consume()
             return Function.identity()
         elif self.peek().type == 'number':
@@ -224,6 +225,8 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('x/x^x', q(x, e(x, x)))
 
     def test_errors(self):
+        self.errors('y')
+        self.errors('xx')
         self.errors('1+')
         self.errors('+1')
         self.errors('++')
