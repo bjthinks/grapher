@@ -3,9 +3,14 @@ from function import *
 import unittest
 
 
+ONE = Function.constant(1.0)
 KNOWN_FUNCTIONS = {
     'sin': Function.sin,
     'cos': Function.cos,
+    'tan': lambda x: Function.quotient(Function.sin(x), Function.cos(x)),
+    'cot': lambda x: Function.quotient(Function.cos(x), Function.sin(x)),
+    'sec': lambda x: Function.quotient(ONE, Function.cos(x)),
+    'csc': lambda x: Function.quotient(ONE, Function.sin(x)),
     }
 
 
@@ -115,11 +120,20 @@ class _ParseUnitTests(unittest.TestCase):
         self.assertRaises(ParseError, Parse(tokenize(input_str)).go)
 
     def test_basic_functions(self):
-        self.matches('x', Function.identity())
+        x = Function.identity()
+        def c(value):
+            return Function.constant(float(value))
+        self.matches('x', x)
         self.matches('1', Function.constant(1.0))
         self.matches('4', Function.constant(4.0))
-        self.matches('sin x', Function.sin(Function.identity()))
-        self.matches('cos x', Function.cos(Function.identity()))
+        self.matches('sin x', Function.sin(x))
+        self.matches('cos x', Function.cos(x))
+        self.matches('tan x', Function.quotient(Function.sin(x),
+                                                Function.cos(x)))
+        self.matches('cot x', Function.quotient(Function.cos(x),
+                                                Function.sin(x)))
+        self.matches('sec x', Function.quotient(c(1), Function.cos(x)))
+        self.matches('csc x', Function.quotient(c(1), Function.sin(x)))
 
     def test_basic_operators(self):
         x = Function.identity()
