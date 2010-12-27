@@ -51,28 +51,38 @@ class Parse(object):
         # 0 => never stop
         # 1 => stop on +
         # 2 => stop on *
-        # 3 => stop on ^
+        # 3 => stop on ^, juxtaposition
         result = self.atom(allow_unary_minus)
-        while self.peek().type == 'symbol':
-            if precedence < 1 and self.peek().datum == '+':
-                self.consume()
-                result = Function.sum(result, self.expression(1))
-            elif precedence < 1 and self.peek().datum == '-':
-                self.consume()
-                result = Function.sum(
-                    result, Function.product(
-                        Function.constant(-1.0), self.expression(1)))
-            elif precedence < 2 and self.peek().datum == '*':
-                self.consume()
-                result = Function.product(result, self.expression(2))
-            elif precedence < 2 and self.peek().datum == '/':
-                self.consume()
-                result = Function.quotient(result, self.expression(2))
-            elif precedence < 3 and self.peek().datum == '^':
-                self.consume()
-                result = Function.power(result, self.expression(2))
+        while True:
+            if self.peek().type == 'symbol':
+                if precedence < 1 and self.peek().datum == '+':
+                    self.consume()
+                    result = Function.sum(result, self.expression(1))
+                elif precedence < 1 and self.peek().datum == '-':
+                    self.consume()
+                    result = Function.sum(
+                        result, Function.product(
+                            Function.constant(-1.0), self.expression(1)))
+                elif precedence < 2 and self.peek().datum == '*':
+                    self.consume()
+                    result = Function.product(result, self.expression(2))
+                elif precedence < 2 and self.peek().datum == '/':
+                    self.consume()
+                    result = Function.quotient(result, self.expression(2))
+                elif precedence < 3 and self.peek().datum == '^':
+                    self.consume()
+                    result = Function.power(result, self.expression(2))
+                else:
+                    # 3(x+1)
+                    break
             else:
-                break
+                # Paul doesn't like this
+                old_pos = self.pos
+                try:
+                    result = Function.product(result, self.expression(2))
+                except ParseError:
+                    self.pos = old_pos
+                    break
         return result
 
     def go(self):
@@ -131,6 +141,9 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('-(-2)', p(c(-1), p(c(-1), c(2))))
 
         self.matches('x^x', e(x, x))
+
+        self.matches('x x', p(x, x))
+        self.matches('1 1', p(c(1), c(1)))
 
     def test_precedence(self):
         x = Function.identity()
@@ -192,7 +205,6 @@ class _ParseUnitTests(unittest.TestCase):
         self.errors('1*')
         self.errors('*1')
         self.errors('**')
-        self.errors('1 1')
         self.errors('--1')
 
 if __name__ == '__main__':
