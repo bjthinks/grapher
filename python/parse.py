@@ -214,6 +214,14 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('x^2 x', p(e(x, c(2)), x))
         self.matches('x x^x', p(x, e(x, x)))
         self.matches('x^2 x^3', p(e(x, c(2)), e(x,c(3))))
+        self.matches('(2)-1', d(c(2), c(1)))
+        self.matches('(2)-(1)', d(c(2), c(1)))
+        self.matches('2-(1)', d(c(2), c(1)))
+        self.matches('2(-1)', p(c(2), c(-1)))
+        self.matches('x^x*x', p(e(x, x), x))
+        self.matches('x*x^x', p(x, e(x, x)))
+        self.matches('x^x/x', q(e(x, x), x))
+        self.matches('x/x^x', q(x, e(x, x)))
 
     def test_errors(self):
         self.errors('1+')
@@ -224,6 +232,8 @@ class _ParseUnitTests(unittest.TestCase):
         self.errors('*1')
         self.errors('**')
         self.errors('--1')
+        self.errors('(2-)1')
+        self.errors('(2(-)1)')
 
 if __name__ == '__main__':
     unittest.main()
