@@ -43,15 +43,16 @@ class Parse(object):
                 self.consume()
                 # TODO: -x^2
                 return Function.product(Function.constant(-1.0),
-                                        self.atom(False))
+                                        self.expression(2, False))
         raise ParseError()
 
-    def expression(self, precedence):
+    def expression(self, precedence, allow_unary_minus = True):
         # precedence tells when to stop.
         # 0 => never stop
         # 1 => stop on +
         # 2 => stop on *
-        result = self.atom(True)
+        # 3 => stop on ^
+        result = self.atom(allow_unary_minus)
         while self.peek().type == 'symbol':
             if precedence < 1 and self.peek().datum == '+':
                 self.consume()
@@ -69,7 +70,7 @@ class Parse(object):
                 result = Function.quotient(result, self.expression(2))
             elif precedence < 3 and self.peek().datum == '^':
                 self.consume()
-                result = Function.power(result, self.expression(3))
+                result = Function.power(result, self.expression(2))
             else:
                 break
         return result
@@ -140,6 +141,7 @@ class _ParseUnitTests(unittest.TestCase):
         q = Function.quotient
         def d(arg1, arg2):
             return s(arg1, p(c(-1), arg2))
+        e = Function.power
 
         self.matches('2*x+3', s(p(c(2), x), c(3)))
         self.matches('2*x+x', s(p(c(2), x), x))
@@ -175,6 +177,12 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('-x--2', d(p(c(-1), x), c(-2)))
         self.matches('-x*x/-3-x/5+-4', s(d(q(p(p(c(-1), x), x), c(-3)),
                                            q(x, c(5))), c(-4)))
+        self.matches('x^x^x', e(x, e(x, x)))
+        self.matches('x*x^2', p(x, e(x, c(2))))
+        self.matches('x^x*2', p(e(x, x), c(2)))
+        self.matches('x^-2', e(x, c(-2)))
+        self.matches('-x^2', p(c(-1), e(x, c(2))))
+        self.matches('-x^-2', p(c(-1), e(x, c(-2))))
 
     def test_errors(self):
         self.errors('1+')
