@@ -67,6 +67,9 @@ class Parse(object):
             elif precedence < 2 and self.peek().datum == '/':
                 self.consume()
                 result = Function.quotient(result, self.expression(2))
+            elif precedence < 3 and self.peek().datum == '^':
+                self.consume()
+                result = Function.power(result, self.expression(3))
             else:
                 break
         return result
@@ -99,6 +102,7 @@ class _ParseUnitTests(unittest.TestCase):
         q = Function.quotient
         def d(arg1, arg2):
             return s(arg1, p(c(-1), arg2))
+        e = Function.power
 
         self.matches('x+17', s(x, c(17)))
         self.matches('x+x', s(x, x))
@@ -124,6 +128,8 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('-x', p(c(-1), x))
         self.matches('-2', p(c(-1), c(2)))
         self.matches('-(-2)', p(c(-1), p(c(-1), c(2))))
+
+        self.matches('x^x', e(x, x))
 
     def test_precedence(self):
         x = Function.identity()
