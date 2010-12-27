@@ -64,7 +64,7 @@ class Parse(object):
             if function_name not in KNOWN_FUNCTIONS:
                 raise ParseError()
             self.consume()
-            return KNOWN_FUNCTIONS[function_name](self.atom(False))
+            return KNOWN_FUNCTIONS[function_name](self.expression(2, True))
         raise ParseError()
 
     def expression(self, precedence, allow_unary_minus = True):
@@ -192,6 +192,7 @@ class _ParseUnitTests(unittest.TestCase):
         def d(arg1, arg2):
             return s(arg1, p(c(-1), arg2))
         e = Function.power
+        sin = Function.sin
 
         self.matches('2*x+3', s(p(c(2), x), c(3)))
         self.matches('2*x+x', s(p(c(2), x), x))
@@ -257,6 +258,9 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('x*x^x', p(x, e(x, x)))
         self.matches('x^x/x', q(e(x, x), x))
         self.matches('x/x^x', q(x, e(x, x)))
+        self.matches('sin x^x', sin(e(x, x)))
+        self.matches('sin -x', sin(p(c(-1), x)))
+        self.matches('sin 2x', sin(p(c(2), x)))
 
     def test_errors(self):
         self.errors('y')
@@ -271,6 +275,7 @@ class _ParseUnitTests(unittest.TestCase):
         self.errors('--1')
         self.errors('(2-)1')
         self.errors('(2(-)1)')
+        self.errors('sin')
 
 if __name__ == '__main__':
     unittest.main()
