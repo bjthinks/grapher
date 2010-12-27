@@ -6,14 +6,27 @@ from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from canvas import Canvas
+from tokenize import tokenize
+from parse import Parse
 
 class MyHandler(webapp.RequestHandler):
     def get(self, *groups):
 	if groups[0] == '' or groups[0] == 'index.html':
             self.response.headers['Content-Type'] = 'application/xhtml+xml'
-	    function = self.request.get('f')
-	    escaped_function = cgi.escape(function, True)
-	    values = { 'escaped_function' : escaped_function,
+	    input = self.request.get('f')
+	    escaped_input = cgi.escape(input, True)
+            try:
+                tokens = [t for t in tokenize(input)]
+                try:
+                    function = Parse(tokens).go()
+                except (ParseError):
+                    function = None
+            except (Exception):
+                tokens = None
+                function = None
+	    values = { 'escaped_input' : escaped_input,
+                       'tokenized_function' : cgi.escape(str(tokens)),
+                       'parsed_function' : cgi.escape(str(function)),
                        'escaped_url' : cgi.escape(groups[0]),
                        'svg_graph' : graph(function),
                        'lorem_ipsum' : lorem_ipsum()}
@@ -24,8 +37,15 @@ class MyHandler(webapp.RequestHandler):
 	    self.response.out.write(
 		    template.render('error.html', {}))
 
-def graph(function):
-    linelist = [(-2,0,2,0), (-2,0,-1.92,.08), (-2,0,-1.92,-.08), (2,0,1.92,.08), (2,0,1.92,-0.08), (0,-2,0,2), (0,-2,-.08,-1.92), (0,-2,.08,-1.92), (0,2,-.08,1.92), (0,2,.08,1.92), (-2,-2,2,2)]
+def graph(f):
+    linelist = [(-2,0,2,0), (-2,0,-1.92,.08), (-2,0,-1.92,-.08), (2,0,1.92,.08), (2,0,1.92,-0.08), (0,-2,0,2), (0,-2,-.08,-1.92), (0,-2,.08,-1.92), (0,2,-.08,1.92), (0,2,.08,1.92)]
+    if f != None:
+        dx = 0.1
+        for x in [(x-20)/10. for x in xrange(40)]:
+            try:
+                linelist.append((x,f(x),x+dx,f(x+dx)))
+            except (ZeroDivisionError, ValueError):
+                pass
     return "\n".join(Canvas().lines(linelist).output())
 
 def lorem_ipsum():

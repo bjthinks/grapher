@@ -17,10 +17,12 @@
       <div id="center">
 	<form action="/" method="get">
 	  <p>Please enter a function to graph:<br/>
-	    f(x) = <input type="text" name="f" value="{{ escaped_function }}"/>
+	    f(x) = <input type="text" name="f" value="{{ escaped_input }}"/>
 	    <input type="submit" value="Graph"/>
 	  </p>
 	</form>
+	<p>Tokens: {{ tokenized_function }}</p>
+	<p>Parse: {{ parsed_function }}</p>
 	{{ svg_graph }}
       </div>
       <div id="left">
