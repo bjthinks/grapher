@@ -7,7 +7,7 @@ from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from canvas import Canvas
 from tokenize import tokenize
-from parse import Parse
+from parse import Parse, ParseError
 
 class MyHandler(webapp.RequestHandler):
     def get(self, *groups):
@@ -15,16 +15,14 @@ class MyHandler(webapp.RequestHandler):
             self.response.headers['Content-Type'] = 'application/xhtml+xml'
 	    input = self.request.get('f')
 	    escaped_input = cgi.escape(input, True)
+            tokens = None
+            function = None
             try:
-                tokens = [t for t in tokenize(input)]
-                try:
-                    function = Parse(tokens).go()
-                except (ParseError):
-                    function = None
-            except (Exception):
-                tokens = None
-                function = None
-	    values = { 'escaped_input' : escaped_input,
+                tokens = list(tokenize(input))
+                function = Parse(tokens).go()
+            except (Exception, ParseError):
+                pass
+            values = { 'escaped_input' : escaped_input,
                        'tokenized_function' : cgi.escape(str(tokens)),
                        'parsed_function' : cgi.escape(str(function)),
                        'escaped_url' : cgi.escape(groups[0]),
@@ -38,12 +36,12 @@ class MyHandler(webapp.RequestHandler):
 		    template.render('error.html', {}))
 
 def graph(f):
-    linelist = [(-2,0,2,0), (-2,0,-1.92,.08), (-2,0,-1.92,-.08), (2,0,1.92,.08), (2,0,1.92,-0.08), (0,-2,0,2), (0,-2,-.08,-1.92), (0,-2,.08,-1.92), (0,2,-.08,1.92), (0,2,.08,1.92)]
+    linelist = [((-2,0), (2,0)), ((-2,0), (-1.92,.08)), ((-2,0), (-1.92,-.08)), ((2,0), (1.92,.08)), ((2,0), (1.92,-0.08)), ((0,-2), (0,2)), ((0,-2), (-.08,-1.92)), ((0,-2), (.08,-1.92)), ((0,2), (-.08,1.92)), ((0,2), (.08,1.92))]
     if f != None:
         dx = 0.1
         for x in [(x-20)/10. for x in xrange(40)]:
             try:
-                linelist.append((x,f(x),x+dx,f(x+dx)))
+                linelist.append(((x,f(x)), (x+dx,f(x+dx))))
             except (ZeroDivisionError, ValueError):
                 pass
     return "\n".join(Canvas().lines(linelist).output())
