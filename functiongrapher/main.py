@@ -6,7 +6,7 @@ from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
 from canvas import Canvas
-from tokenize import tokenize
+from tokenize import tokenize, TokenizerError
 from parse import Parse, ParseError
 
 class MyHandler(webapp.RequestHandler):
@@ -20,7 +20,7 @@ class MyHandler(webapp.RequestHandler):
             try:
                 tokens = list(tokenize(input))
                 function = Parse(tokens).go()
-            except (Exception, ParseError):
+            except (TokenizerError, ParseError):
                 pass
             values = { 'escaped_input' : escaped_input,
                        'tokenized_function' : cgi.escape(str(tokens)),
