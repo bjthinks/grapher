@@ -9,6 +9,7 @@ import re
 # 'function'  string containing the function name
 # 'variable'  string containing the variable name
 # 'symbol'    one-character string containing the symbol
+# 'eof'       None
 Token = collections.namedtuple('Token', 'type datum pos')
 
 TRIG_FUNCTIONS = ['sin', 'cos', 'tan', 'cot', 'sec', 'csc']
@@ -54,11 +55,12 @@ def tokenize(input_str):
         else:
             raise TokenizerError(pos)
         pos = WHITESPACE_REGEXP.match(input_str, pos).end()
+    yield Token('eof', None, pos)
 
 
 class _TokenizerUnitTests(unittest.TestCase):
     def should_succeed(self, input_str, expected_tokens):
-        self.assertEqual([(t.type, t.datum, t.pos) for t in tokenize(input_str)], [(typ, datum, pos) for typ, datum, pos in expected_tokens])
+        self.assertEqual([(t.type, t.datum, t.pos) for t in tokenize(input_str)], expected_tokens + [('eof', None, len(input_str))])
 
     def should_fail(self, input_str):
         self.assertRaises(TokenizerError, lambda: list(tokenize(input_str)))
