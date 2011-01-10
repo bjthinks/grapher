@@ -31,9 +31,12 @@ class Canvas(object):
         return self
 
     def output(self):
-        # someone has been writing TOO MUCH Haskell...
-        return ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="{0}" height="{1}">'.format(self.__xpixels, self.__ypixels)] + \
-            ['<svg:line x1="{0}" y1="{1}" x2="{2}" y2="{3}" stroke="black" stroke-width="1"/>'.format(self.__x_coord(x1), self.__y_coord(y1), self.__x_coord(x2), self.__y_coord(y2)) for (x1,y1,x2,y2) in self.__svg_output] + \
+        return ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="{0}" height="{1}">'
+                .format(self.__xpixels, self.__ypixels)] + \
+                ['<svg:line x1="{0}" y1="{1}" x2="{2}" y2="{3}" stroke="black" stroke-width="1"/>'
+                 .format(self.__x_coord(x1), self.__y_coord(y1),
+                         self.__x_coord(x2), self.__y_coord(y2))
+                 for (x1,y1,x2,y2) in self.__svg_output] + \
             ['</svg:svg>']
 
     def __x_coord(self, x):
@@ -79,6 +82,15 @@ class canvasTest(unittest.TestCase):
                          .output(),
                          ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="500" height="500">',
                           '<svg:line x1="125.0" y1="125.0" x2="500.0" y2="0.0" stroke="black" stroke-width="1"/>',
+                          '<svg:line x1="0.0" y1="500.0" x2="500.0" y2="250.0" stroke="black" stroke-width="1"/>',
+                          '</svg:svg>'])
+
+    def test_path(self):
+        self.assertEqual(Canvas().path([(-1,1), (2,2), (-2,-2), (2,0)])
+                         .output(),
+                         ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="500" height="500">',
+                          '<svg:line x1="125.0" y1="125.0" x2="500.0" y2="0.0" stroke="black" stroke-width="1"/>',
+                          '<svg:line x1="500.0" y1="0.0" x2="0.0" y2="500.0" stroke="black" stroke-width="1"/>',
                           '<svg:line x1="0.0" y1="500.0" x2="500.0" y2="250.0" stroke="black" stroke-width="1"/>',
                           '</svg:svg>'])
 
