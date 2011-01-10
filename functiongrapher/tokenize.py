@@ -58,7 +58,7 @@ def tokenize(input_str):
 
 class _TokenizerUnitTests(unittest.TestCase):
     def should_succeed(self, input_str, expected_tokens):
-        self.assertEqual([(t.type, t.datum) for t in tokenize(input_str)], [(typ, datum) for typ, datum in expected_tokens])
+        self.assertEqual([(t.type, t.datum, t.pos) for t in tokenize(input_str)], [(typ, datum, pos) for typ, datum, pos in expected_tokens])
 
     def should_fail(self, input_str):
         self.assertRaises(TokenizerError, lambda: list(tokenize(input_str)))
@@ -66,31 +66,37 @@ class _TokenizerUnitTests(unittest.TestCase):
     def test_numbers(self):
         self.should_succeed("", [])
         self.should_fail(".")
-        self.should_succeed("0.", [('number', 0.0)])
-        self.should_succeed(".0", [('number', 0.0)])
-        self.should_succeed("3.", [('number', 3.0)])
-        self.should_succeed(".5", [('number', 0.5)])
-        self.should_succeed("123.25", [('number', 123.25)])
-        self.should_succeed("1.25.125", [('number', 1.25), ('number', .125)])
-        self.should_succeed(".5.5", [('number', 0.5), ('number', 0.5)])
-        self.should_succeed("3", [('number', 3.0)])
+        self.should_succeed("0.", [('number', 0.0, 0)])
+        self.should_succeed(".0", [('number', 0.0, 0)])
+        self.should_succeed("3.", [('number', 3.0, 0)])
+        self.should_succeed(".5", [('number', 0.5, 0)])
+        self.should_succeed("123.25", [('number', 123.25, 0)])
+        self.should_succeed("1.25.125", [('number', 1.25, 0), ('number', .125, 4)])
+        self.should_succeed(".5.5", [('number', 0.5, 0), ('number', 0.5, 2)])
+        self.should_succeed("3", [('number', 3.0, 0)])
 
     def test_functions(self):
         for func in ["sin", "cos", "tan", "sec", "cot", "csc",
                      "asin", "acos", "atan", "asec", "acot", "acsc",
                      "log", "ln", "exp"]:
-            self.should_succeed(func, [('function', func)])
-            self.should_succeed(func + 'x', [('variable', func + 'x')])
+            self.should_succeed(func, [('function', func, 0)])
+            self.should_succeed(func + 'x', [('variable', func + 'x', 0)])
 
     def test_variables(self):
-        self.should_succeed('a', [('variable', 'a')])
-        self.should_succeed('a3b45c6', [('variable', 'a3b45c6')])
+        self.should_succeed('a', [('variable', 'a', 0)])
+        self.should_succeed('a3b45c6', [('variable', 'a3b45c6', 0)])
 
     def test_symbols(self):
         for symbol in "+-*/()^":
-            self.should_succeed(symbol, [('symbol', symbol)])
+            self.should_succeed(symbol, [('symbol', symbol, 0)])
         for not_symbol in "!@#$%&_={}[]|:;<>,.?":
             self.should_fail(not_symbol)
+
+    def test_position(self):
+        self.should_succeed('a b   c de       f   ',
+                            [('variable', 'a', 0), ('variable', 'b', 2),
+                             ('variable', 'c', 6), ('variable', 'de', 8),
+                             ('variable', 'f', 17)])
 
     def test_error(self):
         pass
