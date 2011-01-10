@@ -18,16 +18,14 @@ class MyHandler(webapp.RequestHandler):
             tokens = None
             function = None
             error_message = ''
-            nice = '<p>We sincerely apologize, but we could not understand what you typed.  Please repair your function at the indicated location and try again.</p>'
+            nice = '<p>We sincerely apologize, but we could not understand what you typed.  Please repair your function at the indicated location and try again.</p>\n<pre>{0}\n{1}^</pre>\n'
             try:
                 tokens = list(tokenize(input))
                 function = Parse(tokens).go()
             except TokenizerError, e:
-                error_position = e.position
-                error_message = nice + '<pre>' + escaped_input + '\n' + ' ' * error_position + '^</pre>'
+                error_message = nice.format(escaped_input, ' ' * e.position)
             except ParseError, e:
-                error_position = 0
-                error_message = nice + '<pre>' + escaped_input + '\n' + ' ' * error_position + '^</pre>'
+                error_message = nice.format(escaped_input, ' ' * tokens[e.position].pos)
             values = { 'escaped_input' : escaped_input,
                        'escaped_url' : cgi.escape(groups[0]),
                        'error_message' : error_message,
