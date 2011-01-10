@@ -30,7 +30,8 @@ class Parse(object):
         if self.pos < len(self.tokens):
             return self.tokens[self.pos]
         else:
-            return Token('eof', None)
+            # THIS IS WRONG FIXME
+            return Token('eof', None, 0)
 
     def consume(self):
         # Note: shouldn't call this if at EOF.

@@ -9,7 +9,7 @@ import re
 # 'function'  string containing the function name
 # 'variable'  string containing the variable name
 # 'symbol'    one-character string containing the symbol
-Token = collections.namedtuple('Token', 'type datum')
+Token = collections.namedtuple('Token', 'type datum pos')
 
 TRIG_FUNCTIONS = ['sin', 'cos', 'tan', 'cot', 'sec', 'csc']
 
@@ -24,10 +24,10 @@ FUNCTIONS = TRIG_FUNCTIONS + INVERSE_TRIG_FUNCTIONS + LOG_FUNCTIONS + EXP_FUNCTI
 # A sequence of tuples (REGEXP, TOKEN_BUILDER), where REGEXP is the
 # regular expression to match, and TOKEN_BUILDER is a function to call
 # to transform a string into a token.
-TOKENIZATION_RULES = ((re.compile(r'[0-9]+(\.[0-9]*)?|\.[0-9]+'), lambda s: Token('number', float(s))),
+TOKENIZATION_RULES = ((re.compile(r'[0-9]+(\.[0-9]*)?|\.[0-9]+'), lambda s, pos: Token('number', float(s), pos)),
                       (re.compile('[a-zA-Z][a-zA-Z0-9]*'),
-                       lambda s: Token('function' if s in FUNCTIONS else 'variable', s)),
-                      (re.compile('[-()+*/^]'), lambda s: Token('symbol', s)))
+                       lambda s, pos: Token('function' if s in FUNCTIONS else 'variable', s, pos)),
+                      (re.compile('[-()+*/^]'), lambda s, pos: Token('symbol', s, pos)))
 
 WHITESPACE_REGEXP = re.compile('\s*')
 
@@ -35,8 +35,9 @@ WHITESPACE_REGEXP = re.compile('\s*')
 # The exception that gets raised if there is an error during
 # tokenization.
 class TokenizerError(Exception):
-    def __init__(self, msg):
-        Exception.__init__(self, msg)
+    def __init__(self, pos):
+        self.position = pos
+        Exception.__init__(self, 'Error at location {0}'.format(pos))
 
 
 # Yield a stream of tokens representing the given string.  If a
@@ -47,17 +48,17 @@ def tokenize(input_str):
         for regexp, token_builder in TOKENIZATION_RULES:
             m = regexp.match(input_str, pos)
             if m is not None:
-                yield token_builder(m.group())
+                yield token_builder(m.group(), pos)
                 pos = m.end()
                 break
         else:
-            raise TokenizerError('Parse error at location {0}'.format(pos))
+            raise TokenizerError(pos)
         pos = WHITESPACE_REGEXP.match(input_str, pos).end()
 
 
 class _TokenizerUnitTests(unittest.TestCase):
     def should_succeed(self, input_str, expected_tokens):
-        self.assertEqual(list(tokenize(input_str)), [Token(typ, datum) for typ, datum in expected_tokens])
+        self.assertEqual([(t.type, t.datum) for t in tokenize(input_str)], [(typ, datum) for typ, datum in expected_tokens])
 
     def should_fail(self, input_str):
         self.assertRaises(TokenizerError, lambda: list(tokenize(input_str)))
@@ -90,6 +91,9 @@ class _TokenizerUnitTests(unittest.TestCase):
             self.should_succeed(symbol, [('symbol', symbol)])
         for not_symbol in "!@#$%&_={}[]|:;<>,.?":
             self.should_fail(not_symbol)
+
+    def test_error(self):
+        pass
 
 if __name__ == '__main__':
     unittest.main()
