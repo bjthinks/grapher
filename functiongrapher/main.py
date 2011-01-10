@@ -27,7 +27,6 @@ class MyHandler(webapp.RequestHandler):
             except ParseError, e:
                 error_message = nice.format(escaped_input, ' ' * tokens[e.position].pos)
             values = { 'escaped_input' : escaped_input,
-                       'escaped_url' : cgi.escape(groups[0]),
                        'error_message' : error_message,
                        'svg_graph' : graph(function),
                        'lorem_ipsum' : lorem_ipsum()}
