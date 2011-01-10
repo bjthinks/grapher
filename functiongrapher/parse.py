@@ -38,7 +38,7 @@ class Parse(object):
         self.pos += 1
         return result
 
-    def atom(self, allow_unary_minus):
+    def atom(self, allow_unary_minus, allow_function):
         if self.peek().type == 'variable':
             if self.peek().datum != 'x':
                 raise ParseError()
@@ -59,22 +59,23 @@ class Parse(object):
                 # TODO: -x^2
                 return Function.product(Function.constant(-1.0),
                                         self.expression(2, False))
-        elif self.peek().type == 'function':
+        elif self.peek().type == 'function' and allow_function:
             function_name = self.peek().datum
             if function_name not in KNOWN_FUNCTIONS:
                 raise ParseError()
             self.consume()
-            return KNOWN_FUNCTIONS[function_name](self.expression(2, True))
+            return KNOWN_FUNCTIONS[function_name](self.expression(2, True, True))
         raise ParseError()
 
-    def expression(self, precedence, allow_unary_minus = True):
+    def expression(self, precedence, allow_unary_minus = True,
+                   inside_function = False, allow_function = True):
         # precedence tells when to stop.
         # 0 => never stop
         # 1 => stop on +
         # 2 => stop on *
         # 3 => stop on juxtaposition
         # 4 => stop on ^
-        result = self.atom(allow_unary_minus)
+        result = self.atom(allow_unary_minus, allow_function)
         while True:
             is_symbol = (self.peek().type == 'symbol')
             if is_symbol and precedence < 1 and self.peek().datum == '+':
@@ -100,7 +101,7 @@ class Parse(object):
                 # Paul doesn't like this
                 old_pos = self.pos
                 try:
-                    result = Function.product(result, self.expression(3))
+                    result = Function.product(result, self.expression(3, inside_function = inside_function, allow_function = not inside_function))
                 except ParseError:
                     self.pos = old_pos
                     break
@@ -193,6 +194,7 @@ class _ParseUnitTests(unittest.TestCase):
             return s(arg1, p(c(-1), arg2))
         e = Function.power
         sin = Function.sin
+        cos = Function.cos
 
         self.matches('2*x+3', s(p(c(2), x), c(3)))
         self.matches('2*x+x', s(p(c(2), x), x))
@@ -266,7 +268,15 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('sin x+x', s(sin(x), x))
         self.matches('sin x-x', d(sin(x), x))
         self.matches('sin sin x', sin(sin(x)))
-        # self.matches('sin x sin x', p(sin(x), sin(x)))
+        self.matches('sin x sin x', p(sin(x), sin(x)))
+        self.matches('sin x x^x cos x', p(sin(p(x, e(x, x))), cos(x)))
+        self.matches('sin x^x cos x', p(sin(e(x, x)), cos(x)))
+        self.matches('sin cos x x^x', sin(cos(p(x, e(x, x)))))
+        self.matches('sin cos x^x x', sin(cos(p(e(x, x), x))))
+        self.matches('sin x cos x^x', p(sin(x), cos(e(x, x))))
+        self.matches('sin x^cos x', sin(e(x, cos(x))))
+        self.matches('sin x^cos x^x', sin(e(x, cos(e(x, x)))))
+        self.matches('sin x^x^cos x', sin(e(x, e(x, cos(x)))))
 
     def test_errors(self):
         self.errors('y')
