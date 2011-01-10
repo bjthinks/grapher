@@ -17,15 +17,20 @@ class MyHandler(webapp.RequestHandler):
 	    escaped_input = cgi.escape(input, True)
             tokens = None
             function = None
+            error_message = ''
+            nice = '<p>We sincerely apologize, but we could not understand what you typed.  Please repair your function at the indicated location and try again.</p>'
             try:
                 tokens = list(tokenize(input))
                 function = Parse(tokens).go()
-            except (TokenizerError, ParseError):
-                pass
+            except TokenizerError, e:
+                error_position = e.position
+                error_message = nice + '<pre>' + escaped_input + '\n' + ' ' * error_position + '^</pre>'
+            except ParseError, e:
+                error_position = 0
+                error_message = nice + '<pre>' + escaped_input + '\n' + ' ' * error_position + '^</pre>'
             values = { 'escaped_input' : escaped_input,
-                       'tokenized_function' : cgi.escape(str(tokens)),
-                       'parsed_function' : cgi.escape(str(function)),
                        'escaped_url' : cgi.escape(groups[0]),
+                       'error_message' : error_message,
                        'svg_graph' : graph(function),
                        'lorem_ipsum' : lorem_ipsum()}
 	    self.response.out.write(
