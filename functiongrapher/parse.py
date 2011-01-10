@@ -18,7 +18,9 @@ KNOWN_FUNCTIONS = {
 
 
 class ParseError(Exception):
-    pass
+    def __init__(self, pos):
+        self.position = pos
+        Exception.__init__(self, 'Error at token {0}'.format(pos))
 
 
 class Parse(object):
@@ -42,7 +44,7 @@ class Parse(object):
     def atom(self, allow_unary_minus, allow_function):
         if self.peek().type == 'variable':
             if self.peek().datum != 'x':
-                raise ParseError()
+                raise ParseError(self.pos)
             self.consume()
             return Function.identity()
         elif self.peek().type == 'number':
@@ -52,7 +54,7 @@ class Parse(object):
                 self.consume()
                 result = self.expression(0)
                 if self.peek().type != 'symbol' or self.peek().datum != ')':
-                    raise ParseError()
+                    raise ParseError(self.pos)
                 self.consume()
                 return result
             elif self.peek().datum == '-' and allow_unary_minus:
@@ -63,10 +65,10 @@ class Parse(object):
         elif self.peek().type == 'function' and allow_function:
             function_name = self.peek().datum
             if function_name not in KNOWN_FUNCTIONS:
-                raise ParseError()
+                raise ParseError(self.pos)
             self.consume()
             return KNOWN_FUNCTIONS[function_name](self.expression(2, True, True))
-        raise ParseError()
+        raise ParseError(self.pos)
 
     def expression(self, precedence, allow_unary_minus = True,
                    inside_function = False, allow_function = True):
@@ -113,7 +115,7 @@ class Parse(object):
     def go(self):
         result = self.expression(0)
         if self.peek().type != 'eof':
-            raise ParseError()
+            raise ParseError(self.pos)
         return result
 
 class _ParseUnitTests(unittest.TestCase):
@@ -125,8 +127,16 @@ class _ParseUnitTests(unittest.TestCase):
         self.assertEqual(str(Parse(tokenize(input_str1)).go()),
                          str(Parse(tokenize(input_str2)).go()))
 
-    def errors(self, input_str):
-        self.assertRaises(ParseError, Parse(tokenize(input_str)).go)
+    def errors(self, input_str, pos):
+        try:
+            Parse(tokenize(input_str)).go()
+            self.fail('ParseError not raised: {0}'.format(input_str))
+        except ParseError, e:
+            if e.position != pos:
+                self.fail('ParseError at wrong position: expected {0}, got {1}'.format(pos, e.position))
+        except Exception, e:
+            self.fail('Wrong exception raised: {0}'.format(e))
+        #self.assertRaises(ParseError, Parse(tokenize(input_str)).go)
 
     def test_basic_functions(self):
         x = Function.identity()
@@ -286,19 +296,19 @@ class _ParseUnitTests(unittest.TestCase):
         self.same('sin x^x^cos x', 'sin(x^(x^(cos x)))')
 
     def test_errors(self):
-        self.errors('y')
-        self.errors('xx')
-        self.errors('1+')
-        self.errors('+1')
-        self.errors('++')
-        self.errors('')
-        self.errors('1*')
-        self.errors('*1')
-        self.errors('**')
-        self.errors('--1')
-        self.errors('(2-)1')
-        self.errors('(2(-)1)')
-        self.errors('sin')
+        self.errors('y', 0)
+        self.errors('xx', 0)
+        self.errors('1+', 2)
+        self.errors('+1', 0)
+        self.errors('++', 0)
+        self.errors('', 0)
+        self.errors('1*', 2)
+        self.errors('*1', 0)
+        self.errors('**', 0)
+        self.errors('--1', 1)
+        self.errors('(2-)1', 3)
+        self.errors('(2(-)1)', 2)
+        self.errors('sin', 1)
 
 if __name__ == '__main__':
     unittest.main()
