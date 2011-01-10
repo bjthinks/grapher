@@ -121,6 +121,10 @@ class _ParseUnitTests(unittest.TestCase):
         self.assertEqual(str(Parse(tokenize(input_str)).go()),
                          str(desired_function))
 
+    def same(self, input_str1, input_str2):
+        self.assertEqual(str(Parse(tokenize(input_str1)).go()),
+                         str(Parse(tokenize(input_str2)).go()))
+
     def errors(self, input_str):
         self.assertRaises(ParseError, Parse(tokenize(input_str)).go)
 
@@ -268,16 +272,18 @@ class _ParseUnitTests(unittest.TestCase):
         self.matches('sin x/x', q(sin(x), x))
         self.matches('sin x+x', s(sin(x), x))
         self.matches('sin x-x', d(sin(x), x))
-        self.matches('sin sin x', sin(sin(x)))
-        self.matches('sin x sin x', p(sin(x), sin(x)))
-        self.matches('sin x x^x cos x', p(sin(p(x, e(x, x))), cos(x)))
-        self.matches('sin x^x cos x', p(sin(e(x, x)), cos(x)))
-        self.matches('sin cos x x^x', sin(cos(p(x, e(x, x)))))
-        self.matches('sin cos x^x x', sin(cos(p(e(x, x), x))))
-        self.matches('sin x cos x^x', p(sin(x), cos(e(x, x))))
-        self.matches('sin x^cos x', sin(e(x, cos(x))))
-        self.matches('sin x^cos x^x', sin(e(x, cos(e(x, x)))))
-        self.matches('sin x^x^cos x', sin(e(x, e(x, cos(x)))))
+
+    def test_functionfunction(self):
+        self.same('sin sin x', 'sin (sin x)')
+        self.same('sin x sin x', '(sin x)*(sin x)')
+        self.same('sin x x^x cos x', '(sin(x*(x^x)))*(cos x)')
+        self.same('sin x^x cos x', '(sin(x^x))*(cos x)')
+        self.same('sin cos x x^x', 'sin(cos(x*(x^x)))')
+        self.same('sin cos x^x x', 'sin(cos((x^x)*x))')
+        self.same('sin x cos x^x', '(sin x)*(cos (x^x))')
+        self.same('sin x^cos x', 'sin(x^(cos x))')
+        self.same('sin x^cos x^x', 'sin(x^(cos(x^x)))')
+        self.same('sin x^x^cos x', 'sin(x^(x^(cos x)))')
 
     def test_errors(self):
         self.errors('y')
