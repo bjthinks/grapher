@@ -31,6 +31,14 @@ TOKENIZATION_RULES = ((re.compile(r'[0-9]+(\.[0-9]*)?|\.[0-9]+'), lambda s: Toke
 
 WHITESPACE_REGEXP = re.compile('\s*')
 
+
+# The exception that gets raised if there is an error during
+# tokenization.
+class TokenizerError(Exception):
+    def __init__(self, msg):
+        Exception.__init__(self, msg)
+
+
 # Yield a stream of tokens representing the given string.  If a
 # tokenization error occurs while parsing, raise an exception.
 def tokenize(input_str):
@@ -43,7 +51,7 @@ def tokenize(input_str):
                 pos = m.end()
                 break
         else:
-            raise Exception('Parse error at location {0}'.format(pos))
+            raise TokenizerError('Parse error at location {0}'.format(pos))
         pos = WHITESPACE_REGEXP.match(input_str, pos).end()
 
 
@@ -52,7 +60,7 @@ class _TokenizerUnitTests(unittest.TestCase):
         self.assertEqual(list(tokenize(input_str)), [Token(typ, datum) for typ, datum in expected_tokens])
 
     def should_fail(self, input_str):
-        self.assertRaises(Exception, lambda x: list(tokenize(input_str)))
+        self.assertRaises(TokenizerError, lambda: list(tokenize(input_str)))
 
     def test_numbers(self):
         self.should_succeed("", [])
