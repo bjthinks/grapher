@@ -4,6 +4,8 @@ import unittest
 
 class Canvas(object):
 
+    # This class uses "fluent style" for chaining method invocations
+
     def __init__(self, xpixels = 500, ypixels = 500, xmin = -2, xmax = 2, ymin = -2, ymax = 2):
         self.__xpixels = xpixels
         self.__ypixels = ypixels
@@ -23,12 +25,15 @@ class Canvas(object):
             self.line(*line)
         return self
 
-    # def path(self, pointlist):
+    def path(self, pointlist):
+        for i in xrange(len(pointlist)-1):
+            self.line(pointlist[i], pointlist[i+1])
+        return self
 
     def output(self):
         # someone has been writing TOO MUCH Haskell...
-        return ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="' + str(self.__xpixels) + '" height="' + str(self.__ypixels) + '">'] + \
-            ['<svg:line x1="' + self.__x_coord(x1) + '" y1="' + self.__y_coord(y1) + '" x2="' + self.__x_coord(x2) + '" y2="' + self.__y_coord(y2) + '" stroke="black" stroke-width="1"/>' for (x1,y1,x2,y2) in self.__svg_output] + \
+        return ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="{0}" height="{1}">'.format(self.__xpixels, self.__ypixels)] + \
+            ['<svg:line x1="{0}" y1="{1}" x2="{2}" y2="{3}" stroke="black" stroke-width="1"/>'.format(self.__x_coord(x1), self.__y_coord(y1), self.__x_coord(x2), self.__y_coord(y2)) for (x1,y1,x2,y2) in self.__svg_output] + \
             ['</svg:svg>']
 
     def __x_coord(self, x):
