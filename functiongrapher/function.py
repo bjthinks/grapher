@@ -179,6 +179,8 @@ class _ConstantFunction(Function):
         self._k = k
 
     def __call__(self, param):
+        if isinstance(param, Interval):
+            return Interval(self._k)
         return self._k
 
     def derivative(self):
@@ -515,6 +517,7 @@ class _FunctionUnitTests(unittest.TestCase):
         self.assertEqual(repr(Function.constant(3)), 'Function.constant(3)')
         self.assertEqual(Function.constant(5).derivative()(3.67), 0)
         self.assertEqual(Function.constant(17).polynomial_degree(), 0)
+        self.assertTrue(isinstance(Function.constant(2.)(Interval(1,2)), Interval))
 
     def test_identity(self):
         for val in xrange(5):
