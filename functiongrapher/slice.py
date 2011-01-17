@@ -19,6 +19,16 @@ class _SlicingUnitTests(unittest.TestCase):
     def test_simple(self):
         self.assertTrue(is_bounded(Function.identity(), Interval(0,1),
                                    Interval(0,1)))
+        self.assertFalse(is_bounded(Function.identity(), Interval(0,2),
+                                    Interval(0,1)))
+        self.assertFalse(is_bounded(Function.identity(), Interval(-1,1),
+                                    Interval(0,1)))
+        self.assertFalse(is_bounded(Function.identity(), Interval(-1,2),
+                                    Interval(0,1)))
+        self.assertTrue(is_bounded(Function.constant(0.), Interval(3,4),
+                                   Interval(0,1)))
+        self.assertFalse(is_bounded(Function.constant(2.), Interval(3,4),
+                                    Interval(0,1)))
 
 
 if __name__ == '__main__':
