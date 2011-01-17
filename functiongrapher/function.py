@@ -301,8 +301,11 @@ class _QuotientFunction(Function):
         self.__g = g
 
     def __call__(self, param):
-        # Do we want to convert ZeroDivisionError into ValueError here?
-        return self.__f(param) / self.__g(param)
+        # We want to convert ZeroDivisionError into ValueError here
+        try:
+            return self.__f(param) / self.__g(param)
+        except ZeroDivisionError:
+            raise ValueError
 
     def derivative(self):
         return Function.quotient(Function.sum(
@@ -339,7 +342,11 @@ class _PowerFunction(Function):
         self._g = g
 
     def __call__(self, param):
-        return self._f(param) ** self._g(param)
+        # We want to convert ZeroDivisionError into ValueError here
+        try:
+            return self._f(param) ** self._g(param)
+        except ZeroDivisionError:
+            raise ValueError
 
     def derivative(self):
         if isinstance(self._g, _ConstantFunction):
@@ -883,6 +890,14 @@ class _FunctionUnitTests(unittest.TestCase):
         f = Function.cos(sum(x, prod(x, c(0))))
         self.assertEqual(str(f.weak_simplify()), 'cos(x)')
         self.assertEqual(Function.cos(Function.identity()).polynomial_degree(), None)
+
+    def test_ValueError(self):
+        self.assertRaises(ValueError, Function.quotient(Function.constant(1.),Function.identity()), 0)
+        self.assertRaises(ValueError, Function.power(Function.constant(0.),Function.identity()), -1.)
+        self.assertRaises(ValueError, Function.log(Function.identity()), 0.)
+        self.assertRaises(ValueError, Function.power(Function.constant(0.), Function.constant(-1.)), 83.)
+        self.assertRaises(ValueError, Function.quotient(Function.constant(1.), Function.constant(0.)), 83.)
+        self.assertRaises(ValueError, Function.log(Function.constant(0.)), 83.)
 
 if __name__ == '__main__':
     unittest.main()
