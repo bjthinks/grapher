@@ -1,3 +1,4 @@
+from __future__ import division
 import unittest
 from function import Function
 from interval import Interval
@@ -12,10 +13,15 @@ def is_bounded(function, x_interval, y_interval):
         return False
     if not function(x_interval.right) in y_interval:
         return False
-    return None
+    middle = sum(x_interval.points) / 2
+    left_half = Interval(x_interval.left, middle)
+    right_half = Interval(middle, x_interval.right)
+    return is_bounded(function, left_half, y_interval) and \
+        is_bounded(function, right_half, y_interval)
 
 
 class _SlicingUnitTests(unittest.TestCase):
+
     def test_simple(self):
         self.assertTrue(is_bounded(Function.identity(), Interval(0,1),
                                    Interval(0,1)))
@@ -29,6 +35,21 @@ class _SlicingUnitTests(unittest.TestCase):
                                    Interval(0,1)))
         self.assertFalse(is_bounded(Function.constant(2.), Interval(3,4),
                                     Interval(0,1)))
+
+    def test_split(self):
+        # If this ever breaks, we should solve the problem by writing a
+        # new kind of Function that turns a lambda expression into a
+        # Function.  That way, it will never be simplified.
+        # f = x^2 + x
+        f = Function.sum(Function.power(Function.identity(),
+                                        Function.constant(2)),
+                         Function.identity())
+        # f(-1) = 0, f(0) = 0, f(-.5) = -.25
+        # The range of f on [-1,0] is [-.25,0]
+        # f([-1,0]) = [-1,1]
+        # f([-1,-.5]) = [-.75,.5]
+        # f([-.5,0]) = [-.5,.25]
+        self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-.75,.5)))
 
 
 if __name__ == '__main__':
