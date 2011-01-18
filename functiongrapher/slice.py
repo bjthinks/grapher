@@ -49,7 +49,10 @@ class _SlicingUnitTests(unittest.TestCase):
         # f([-1,0]) = [-1,1]
         # f([-1,-.5]) = [-.75,.5]
         # f([-.5,0]) = [-.5,.25]
+        # This requires splitting in half
         self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-.75,.5)))
+        # This requires 3 levels of recursion
+        self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-.375,.125)))
 
 
 if __name__ == '__main__':
