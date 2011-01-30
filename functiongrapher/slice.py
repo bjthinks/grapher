@@ -4,7 +4,7 @@ from function import Function
 from interval import Interval
 
 
-def is_bounded(function, x_interval, y_interval):
+def is_bounded(function, x_interval, y_interval, depth = 0):
     '''Determine if a function is bounded by an interval, on an interval.'''
 
     if function(x_interval) in y_interval:
@@ -13,11 +13,14 @@ def is_bounded(function, x_interval, y_interval):
         return False
     if not function(x_interval.right) in y_interval:
         return False
+    # Under no circumstances do we recurse more than 12 times
+    if depth >= 12:
+        return None
     middle = sum(x_interval.points) / 2
     left_half = Interval(x_interval.left, middle)
     right_half = Interval(middle, x_interval.right)
-    return is_bounded(function, left_half, y_interval) and \
-        is_bounded(function, right_half, y_interval)
+    return is_bounded(function, left_half, y_interval, depth + 1) and \
+        is_bounded(function, right_half, y_interval, depth + 1)
 
 
 class _SlicingUnitTests(unittest.TestCase):
@@ -55,6 +58,8 @@ class _SlicingUnitTests(unittest.TestCase):
         self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-3/8,1/8)))
         # This requires 8 levels of recursion
         self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-65/256,1/256)))
+        # This will never finish, since it asks for the exact bounds
+        self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-1/4,0)) is None)
 
 
 if __name__ == '__main__':
