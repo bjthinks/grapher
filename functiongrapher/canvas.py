@@ -16,16 +16,22 @@ class Line(object):
 
 class Path(object):
 
-    def __init__(self, start):
-        self.points = [start]
+    def __init__(self):
+        self.points = []
+        self.commands = []
 
     def line_to(self, end):
         self.points.append(end)
+        self.commands.append('L')
+
+    def move_to(self, end):
+        self.points.append(end)
+        self.commands.append('M')
 
     def svg(self, trans):
-        self.d = "M{0} {1}".format(*trans(self.points[0]))
+        self.d = "{0}{1} {2}".format(self.commands[0], *trans(self.points[0]))
         for i in xrange(1,len(self.points)):
-            self.d += " L{0} {1}".format(*trans(self.points[i]))
+            self.d += " {0}{1} {2}".format(self.commands[i], *trans(self.points[i]))
         return '<svg:path d="{0}" stroke="black" stroke-width="1" fill="none"/>'.format(self.d)
 
 
@@ -53,8 +59,8 @@ class Canvas(object):
         return self
 
     def path(self, pointlist):
-        p = Path(pointlist[0])
-        for i in xrange(1,len(pointlist)):
+        p = Path()
+        for i in xrange(0,len(pointlist)):
             p.line_to(pointlist[i])
         self.elements.append(p)
         return self
@@ -90,14 +96,26 @@ class canvasTest(unittest.TestCase):
         self.assertEqual(line.start, (-6,10))
         self.assertEqual(line.end, (-2,12))
 
-    def test_path(self):
+    def test_path_of_lines(self):
         canvas = Canvas(xpixels=256, ypixels=64, xmin=-6, xmax=2, ymin=10, ymax=14)
-        path = Path((-6,10))
+        path = Path()
+        path.move_to((-6,10))
         path.line_to((-2,10))
         path.line_to((-2,12))
         self.assertEqual(path.svg(canvas.xy_to_pixels),
                          '<svg:path d="M0.0 64.0 L128.0 64.0 L128.0 32.0" stroke="black" stroke-width="1" fill="none"/>')
         self.assertEqual(path.points, [(-6,10), (-2,10), (-2,12)])
+
+    def test_path_with_move(self):
+        canvas = Canvas(xpixels=256, ypixels=64, xmin=-6, xmax=2, ymin=10, ymax=14)
+        path = Path()
+        path.move_to((-6,10))
+        path.line_to((-2,10))
+        path.move_to((-2,12))
+        path.line_to((2,12))
+        self.assertEqual(path.svg(canvas.xy_to_pixels),
+                         '<svg:path d="M0.0 64.0 L128.0 64.0 M128.0 32.0 L256.0 32.0" stroke="black" stroke-width="1" fill="none"/>')
+        self.assertEqual(path.points, [(-6,10), (-2,10), (-2,12), (2,12)])
 
     def test_create(self):
         Canvas()
