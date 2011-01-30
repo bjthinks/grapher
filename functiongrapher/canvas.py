@@ -2,6 +2,19 @@ from __future__ import division
 import unittest
 
 
+class Line(object):
+
+    def __init__(self, trans, start, end):
+        self.trans = trans
+        self.start = start
+        self.end = end
+
+    def __str__(self):
+        x1, y1 = self.trans(self.start)
+        x2, y2 = self.trans(self.end)
+        return '<svg:line x1="{0}" y1="{1}" x2="{2}" y2="{3}" stroke="black" stroke-width="1"/>'.format(x1, y1, x2, y2)
+
+
 class Canvas(object):
 
     # This class uses "fluent style" for chaining method invocations
@@ -13,11 +26,11 @@ class Canvas(object):
         self.__xmax = xmax
         self.__ymin = ymin
         self.__ymax = ymax
-        self.__svg_output = []
+        self.__elements = []
 
     def line(self, start, end):
-        # __svg_output stores 4-ples
-        self.__svg_output.append(start + end)
+        # __svg_output stores drawable objects
+        self.__elements.append(Line(self.xy_to_pixels, start, end))
         return self
 
     def lines(self, linelist):
@@ -33,10 +46,7 @@ class Canvas(object):
     def output(self):
         return ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="{0}" height="{1}">'
                 .format(self.__xpixels, self.__ypixels)] + \
-                ['<svg:line x1="{0}" y1="{1}" x2="{2}" y2="{3}" stroke="black" stroke-width="1"/>'
-                 .format(self.__x_coord(x1), self.__y_coord(y1),
-                         self.__x_coord(x2), self.__y_coord(y2))
-                 for (x1,y1,x2,y2) in self.__svg_output] + \
+                [str(e) for e in self.__elements] + \
             ['</svg:svg>']
 
     def xy_to_pixels(self, xy_point):
@@ -56,6 +66,14 @@ class canvasTest(unittest.TestCase):
         self.assertEqual(canvas.xy_to_pixels((-6, 10)), (0, 64))
         self.assertEqual(canvas.xy_to_pixels((2, 14)), (256, 0))
 
+    def test_line(self):
+        canvas = Canvas(xpixels=256, ypixels=64, xmin=-6, xmax=2, ymin=10, ymax=14)
+        line = Line(canvas.xy_to_pixels, (-6,10), (-2,12))
+        self.assertEqual(str(line),
+                         '<svg:line x1="0.0" y1="64.0" x2="128.0" y2="32.0" stroke="black" stroke-width="1"/>')
+        self.assertEqual(line.start, (-6,10))
+        self.assertEqual(line.end, (-2,12))
+
     def test_create(self):
         Canvas()
         Canvas(xpixels=345, ypixels=654)
@@ -73,7 +91,7 @@ class canvasTest(unittest.TestCase):
                          ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="200" height="300">',
                           '</svg:svg>'])
 
-    def test_line(self):
+    def test_old_line(self):
         self.assertEqual(Canvas().line((0,0), (1,1)).output(),
                          ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="500" height="500">',
                           '<svg:line x1="250.0" y1="250.0" x2="375.0" y2="125.0" stroke="black" stroke-width="1"/>',
