@@ -39,14 +39,22 @@ class Canvas(object):
                  for (x1,y1,x2,y2) in self.__svg_output] + \
             ['</svg:svg>']
 
+    def xy_to_pixels(self, xy_point):
+        return (self.__x_coord(xy_point[0]), self.__y_coord(xy_point[1]))
+
     def __x_coord(self, x):
-        return str((x-self.__xmin)/(self.__xmax-self.__xmin)*self.__xpixels)
+        return (x-self.__xmin)/(self.__xmax-self.__xmin)*self.__xpixels
 
     def __y_coord(self, y):
-        return str((self.__ymax-y)/(self.__ymax-self.__ymin)*self.__ypixels)
+        return (self.__ymax-y)/(self.__ymax-self.__ymin)*self.__ypixels
 
 
 class canvasTest(unittest.TestCase):
+
+    def test_coordinate_transformation(self):
+        canvas = Canvas(xpixels=256, ypixels=64, xmin=-6, xmax=2, ymin=10, ymax=14)
+        self.assertEqual(canvas.xy_to_pixels((-6, 10)), (0, 64))
+        self.assertEqual(canvas.xy_to_pixels((2, 14)), (256, 0))
 
     def test_create(self):
         Canvas()
