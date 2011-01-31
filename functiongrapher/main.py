@@ -44,6 +44,7 @@ def graph(f):
     if f != None:
         path = Path()
         pen_down = False
+        dx = 0.1
         for x in [(x-20)/10. for x in xrange(41)]:
             try:
                 point = (x,f(x))
@@ -54,7 +55,18 @@ def graph(f):
                     path.move_to(point)
                     pen_down = True
                 else:
-                    path.line_to(point)
+                    try:
+                        control2 = (x-dx/3,f(x)+f.derivative()(x)*(-dx/3))
+                    except:
+                        control2 = None
+                    if control1 is None or control2 is None:
+                        path.line_to(point)
+                    else:
+                        path.spline_to(control1, control2, point)
+                try:
+                    control1 = (x+dx/3,f(x)+f.derivative()(x)*(dx/3))
+                except:
+                    control1 = None
     return "\n".join(canvas.add(path).output())
 
 def lorem_ipsum():
