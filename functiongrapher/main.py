@@ -5,7 +5,7 @@ import cgi
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
-from canvas import Canvas
+from canvas import Canvas, Line, Path
 from tokenize import tokenize, TokenizerError
 from parse import Parse, ParseError
 
@@ -38,15 +38,24 @@ class MyHandler(webapp.RequestHandler):
 		    template.render('error.html', {}))
 
 def graph(f):
-    linelist = [((-2,0), (2,0)), ((-2,0), (-1.92,.08)), ((-2,0), (-1.92,-.08)), ((2,0), (1.92,.08)), ((2,0), (1.92,-0.08)), ((0,-2), (0,2)), ((0,-2), (-.08,-1.92)), ((0,-2), (.08,-1.92)), ((0,2), (-.08,1.92)), ((0,2), (.08,1.92))]
+    canvas = Canvas()
+    for pointpair in [((-2,0), (2,0)), ((-2,0), (-1.92,.08)), ((-2,0), (-1.92,-.08)), ((2,0), (1.92,.08)), ((2,0), (1.92,-0.08)), ((0,-2), (0,2)), ((0,-2), (-.08,-1.92)), ((0,-2), (.08,-1.92)), ((0,2), (-.08,1.92)), ((0,2), (.08,1.92))]:
+        canvas.add(Line(*pointpair))
     if f != None:
-        dx = 0.1
-        for x in [(x-20)/10. for x in xrange(40)]:
+        path = Path()
+        pen_down = False
+        for x in [(x-20)/10. for x in xrange(41)]:
             try:
-                linelist.append(((x,f(x)), (x+dx,f(x+dx))))
+                point = (x,f(x))
             except (ZeroDivisionError, ValueError):
-                pass
-    return "\n".join(Canvas().lines(linelist).output())
+                pen_down = False
+            else:
+                if not pen_down:
+                    path.move_to(point)
+                    pen_down = True
+                else:
+                    path.line_to(point)
+    return "\n".join(canvas.add(path).output())
 
 def lorem_ipsum():
     return '''<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque libero tellus, condimentum a tempus vel, placerat ut orci. Suspendisse potenti. Ut aliquam aliquet tincidunt. Mauris sit amet nulla tristique dolor convallis faucibus quis eget mauris. Vestibulum facilisis, urna quis viverra sodales, ante sem dapibus metus, ut aliquam diam tortor eu tellus. Sed at ipsum id augue porta tempor. Mauris ornare, urna sit amet luctus adipiscing, sapien massa pretium enim, et congue nibh diam aliquet elit. Sed arcu libero, pellentesque ac iaculis sed, mattis non justo. Nulla mauris ligula, bibendum id tincidunt in, vulputate ut mi. Aenean malesuada placerat turpis et sollicitudin. Nulla rhoncus magna vel turpis eleifend eget tristique erat volutpat. Nunc sapien nunc, interdum ac dictum ac, eleifend nec diam. Nunc fringilla aliquam congue. Curabitur bibendum tellus in est vulputate sed cursus massa iaculis.</p>

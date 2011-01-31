@@ -28,6 +28,14 @@ class Path(object):
         self.points.append(end)
         self.commands.append('M')
 
+    @staticmethod
+    def lines(start, *points):
+        p = Path()
+        p.move_to(start)
+        for point in points:
+            p.line_to(point)
+        return p
+
     def svg(self, trans):
         self.d = "{0}{1} {2}".format(self.commands[0], *trans(self.points[0]))
         for i in xrange(1,len(self.points)):
@@ -48,21 +56,8 @@ class Canvas(object):
         self.__ymax = ymax
         self.elements = []
 
-    def line(self, start, end):
-        # __svg_output stores drawable objects
-        self.elements.append(Line(start, end))
-        return self
-
-    def lines(self, linelist):
-        for line in linelist:
-            self.line(*line)
-        return self
-
-    def path(self, pointlist):
-        p = Path()
-        for i in xrange(0,len(pointlist)):
-            p.line_to(pointlist[i])
-        self.elements.append(p)
+    def add(self, element):
+        self.elements.append(element)
         return self
 
     def output(self):
@@ -135,27 +130,19 @@ class canvasTest(unittest.TestCase):
                           '</svg:svg>'])
 
     def test_canvas_line(self):
-        self.assertEqual(Canvas().line((0,0), (1,1)).output(),
+        self.assertEqual(Canvas().add(Line((0,0), (1,1))).output(),
                          ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="500" height="500">',
                           '<svg:line x1="250.0" y1="250.0" x2="375.0" y2="125.0" stroke="black" stroke-width="1"/>',
                           '</svg:svg>'])
-        self.assertEqual(Canvas().line((-1,1), (2,2))
-                                 .line((-2,-2), (2,0)).output(),
-                         ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="500" height="500">',
-                          '<svg:line x1="125.0" y1="125.0" x2="500.0" y2="0.0" stroke="black" stroke-width="1"/>',
-                          '<svg:line x1="0.0" y1="500.0" x2="500.0" y2="250.0" stroke="black" stroke-width="1"/>',
-                          '</svg:svg>'])
-
-    def test_canvas_lines(self):
-        self.assertEqual(Canvas().lines([((-1,1), (2,2)),((-2,-2), (2,0))])
-                         .output(),
+        self.assertEqual(Canvas().add(Line((-1,1), (2,2)))
+                                 .add(Line((-2,-2), (2,0))).output(),
                          ['<svg:svg xmlns:svg="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="500" height="500">',
                           '<svg:line x1="125.0" y1="125.0" x2="500.0" y2="0.0" stroke="black" stroke-width="1"/>',
                           '<svg:line x1="0.0" y1="500.0" x2="500.0" y2="250.0" stroke="black" stroke-width="1"/>',
                           '</svg:svg>'])
 
     def test_canvas_path(self):
-        elements = Canvas().path([(-1,1), (2,2), (-2,-2), (2,0)]).elements
+        elements = Canvas().add(Path.lines((-1,1), (2,2), (-2,-2), (2,0))).elements
         self.assertEqual(len(elements), 1)
         self.assertEqual(type(elements[0]), Path)
         self.assertEqual(elements[0].points, [(-1,1), (2,2), (-2,-2), (2,0)])
