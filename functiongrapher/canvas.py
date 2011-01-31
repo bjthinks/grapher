@@ -28,6 +28,10 @@ class Path(object):
         self.points.append(end)
         self.commands.append('M')
 
+    def spline_to(self, control_point_1, control_point_2, end):
+        self.points.append((control_point_1, control_point_2, end))
+        self.commands.append('C')
+
     @staticmethod
     def lines(start, *points):
         p = Path()
@@ -37,10 +41,15 @@ class Path(object):
         return p
 
     def svg(self, trans):
-        self.d = "{0}{1} {2}".format(self.commands[0], *trans(self.points[0]))
-        for i in xrange(1,len(self.points)):
-            self.d += " {0}{1} {2}".format(self.commands[i], *trans(self.points[i]))
-        return '<svg:path d="{0}" stroke="black" stroke-width="1" fill="none"/>'.format(self.d)
+        cmd_strings = []
+        for cmd, pts in zip(self.commands, self.points):
+            if not isinstance(pts[0], tuple):
+                pts = (pts,)
+            cmd_strings.append(cmd + ' '.join(["{0} {1}".format(*trans(pt))
+                                               for pt in pts]))
+        d = ' '.join(cmd_strings)
+
+        return '<svg:path d="{0}" stroke="black" stroke-width="1" fill="none"/>'.format(d)
 
 
 class Canvas(object):
@@ -100,6 +109,7 @@ class canvasTest(unittest.TestCase):
         self.assertEqual(path.svg(canvas.xy_to_pixels),
                          '<svg:path d="M0.0 64.0 L128.0 64.0 L128.0 32.0" stroke="black" stroke-width="1" fill="none"/>')
         self.assertEqual(path.points, [(-6,10), (-2,10), (-2,12)])
+        self.assertEqual(path.commands, ['M', 'L', 'L'])
 
     def test_path_with_move(self):
         canvas = Canvas(xpixels=256, ypixels=64, xmin=-6, xmax=2, ymin=10, ymax=14)
@@ -111,6 +121,17 @@ class canvasTest(unittest.TestCase):
         self.assertEqual(path.svg(canvas.xy_to_pixels),
                          '<svg:path d="M0.0 64.0 L128.0 64.0 M128.0 32.0 L256.0 32.0" stroke="black" stroke-width="1" fill="none"/>')
         self.assertEqual(path.points, [(-6,10), (-2,10), (-2,12), (2,12)])
+        self.assertEqual(path.commands, ['M', 'L', 'M', 'L'])
+
+    def test_path_with_spline(self):
+        canvas = Canvas(xpixels=256, ypixels=64, xmin=-6, xmax=2, ymin=10, ymax=14)
+        path = Path()
+        path.move_to((-6,10))
+        path.spline_to((-2,10), (-2,12), (2,12))
+        self.assertEqual(path.svg(canvas.xy_to_pixels),
+                         '<svg:path d="M0.0 64.0 C128.0 64.0 128.0 32.0 256.0 32.0" stroke="black" stroke-width="1" fill="none"/>')
+        self.assertEqual(path.points, [(-6,10), ((-2,10), (-2,12), (2,12))])
+        self.assertEqual(path.commands, ['M', 'C'])
 
     def test_create(self):
         Canvas()
