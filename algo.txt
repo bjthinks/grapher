@@ -1,0 +1,56 @@
+user inputs a function f and an x-range [a,b]
+we set F = (id,f)
+we recursively do the following steps
+
+   construct one or more cubic spline approximations S=(s1,s2)
+   to f on the interval x=[a,b]
+   for each approximation s, attempt to prove that image of S is
+   within tolerance tau of image of F
+   do this recursively as follows
+      ? dist(S,F)([a,b]) in [-tau,tau]
+      yes -> done
+      no -> check endpoints for counterexample, if found then done
+      otherwise -> subdivide at (a+b)/2
+                   adjust S using linear approximation / Newton's method
+                   until we find a division point c with
+                   dist(S(c), F((a+b)/2)) minimized
+                   then recurse
+   if we disproved that image of S is within tau of image of F, then
+   subdivide [a,b], and recurse (including generating new approximations)
+
+approximations:
+
+1.
+if derivatives exist at a and b, then one approximation has
+CONTROL POINTS of
+(a,f(a)), (b,f(b)), (a+(b-a)/3,f(a)+f'(a)*(b-a)/3), the last one
+
+2.
+another approximation has CONTROL POINTS of
+(a,p0), (a+(b-a)/3,p1), (a+2(b-a)/3,p2), (b,p3)
+where
+p0 = a3
+p1 = a0/3 - 3/2 a1 + 3 a2 - 5/6 a3
+p2 = -5/6 a0 + 3 a1 - 3/2 a2 + a3/3
+p3 = a0
+a0 = f(a)
+a1 = f(a+(b-a)/3)
+a2 = f(a+2(b-a)/3)
+a3 = f(b)
+
+3.
+can use idea 1, but extending the tangent by a total xy distance of (b-a)/3(*),
+rather than that distance in only the x-direction
+(*) subject to further knowledge -- may want a larger amount
+
+note that methods 1 and 3 will generate splines that don't have "corners"
+where they meet, but they do require differentiability (apparently)
+
+4.
+if the function is twice differentiable, we may want to experiment with
+curvature information, and somehow make control points closer when f'' is
+larger -- experimentation is needed
+
+5.
+reparametrize F approximately by path length, then use one of 1-4 on the
+resulting x and y coodinate functions independently
