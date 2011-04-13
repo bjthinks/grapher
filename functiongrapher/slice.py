@@ -59,22 +59,36 @@ class _SlicingUnitTests(unittest.TestCase):
         # f([-1,0]) = [-1,1]
         # f([-1,-.5]) = [-.75,.5]
         # f([-.5,0]) = [-.5,.25]
-        # This requires splitting in half
-        self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-3/4,1/2)))
-        # This requires 3 levels of recursion
-        self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-3/8,1/8)))
-        # This requires 8 levels of recursion
-        self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-65/256,1/256)))
         # This will never finish, since it asks for the exact bounds
-        self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-1/4,0)) is None)
+        self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-1/4,0))
+                        is None)
         # g = 1/2*x^3-3/2*x
-        g = Function.sum(Function.product(Function.constant(.5),
-                                          Function.power(Function.identity(),
-                                                         Function.constant(3))),
-                         Function.product(Function.constant(-1.5),
-                                          Function.identity()))
+        g = Function.sum(Function.product(
+                Function.constant(.5),
+                Function.power(Function.identity(),
+                               Function.constant(3))),
+            Function.product(Function.constant(-1.5),
+                             Function.identity()))
         self.assertEqual(is_bounded(g, Interval(-1.5,1.5), Interval(-.9,1)),
                          False)
+
+    def test_depth(self):
+        f = Function.sum(Function.power(Function.identity(),
+                                        Function.constant(2)),
+                         Function.identity())
+        # This requires splitting in half
+        self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-3/4,1/2), 1))
+        self.assertEqual(is_bounded(f, Interval(-1,0), Interval(-3/4,1/2), 0),
+                         None)
+        # This requires 3 levels of recursion
+        self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-3/8,1/8), 3))
+        self.assertEqual(is_bounded(f, Interval(-1,0), Interval(-3/8,1/8), 2),
+                         None)
+        # This requires 8 levels of recursion
+        self.assertTrue(is_bounded(f, Interval(-1,0), Interval(-65/256,1/256),
+                                   8))
+        self.assertEqual(is_bounded(f, Interval(-1,0), Interval(-65/256,1/256),
+                                    7), None)
 
 
 if __name__ == '__main__':
