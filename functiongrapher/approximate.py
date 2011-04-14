@@ -12,25 +12,31 @@ def approximate(f, t0, t3 = None):
     # Each approximation lives in its own try-except block
 
     try:
-        # A cubic using derivatives at endpoints
-        f0 = f(t0)
-        f3 = f(t3)
-        diff_f = f.derivative()
-        diff_f0 = diff_f(t0)
-        diff_f3 = diff_f(t3)
-        f1 = f0 + diff_f0 * (t3 - t0) / 3
-        f2 = f3 - diff_f3 * (t3 - t0) / 3
-        yield Cubic(t0, t3, f0, f1, f2, f3)
+        yield cubic_derivative_approximation(f, t0, t3)
     except ValueError:
         pass
 
     try:
-        # A straight line
-        f0 = f(t0)
-        f3 = f(t3)
-        yield Cubic(t0, t3, f0, (2*f0 + f3)/3, (f0 + 2*f3)/3, f3)
+        yield linear_approximation(f, t0, t3)
     except ValueError:
         pass
+
+
+def cubic_derivative_approximation(f, t0, t3):
+    f0 = f(t0)
+    f3 = f(t3)
+    diff_f = f.derivative()
+    diff_f0 = diff_f(t0)
+    diff_f3 = diff_f(t3)
+    f1 = f0 + diff_f0 * (t3 - t0) / 3
+    f2 = f3 - diff_f3 * (t3 - t0) / 3
+    return Cubic(t0, t3, f0, f1, f2, f3)
+
+
+def linear_approximation(f, t0, t3):
+    f0 = f(t0)
+    f3 = f(t3)
+    return Cubic(t0, t3, f0, (2*f0 + f3)/3, (f0 + 2*f3)/3, f3)
 
 
 class _ApproximationUnitTests(unittest.TestCase):
@@ -56,6 +62,21 @@ class _ApproximationUnitTests(unittest.TestCase):
                                           Function.constant(-1)),
                              Function.constant(.5))
         self.assertEqual([a for a in approximate(bad, 0, 1)], [])
+
+    def test_cubic_derivative(self):
+        a = cubic_derivative_approximation(
+            Function.power(Function.identity(), Function.constant(3)),
+            4, 10)
+        self.assertAlmostEqual(a(0), 0)
+        self.assertAlmostEqual(a(2), 8)
+        self.assertAlmostEqual(a(5), 125)
+        self.assertAlmostEqual(a(12), 1728)
+        self.assertAlmostEqual(a(-3), -27)
+
+    def test_linear(self):
+        a = linear_approximation(Function.identity(), 0, 1)
+        self.assertEqual(a(3), 3)
+        self.assertEqual(a(44), 44)
 
 
 if __name__ == '__main__':
