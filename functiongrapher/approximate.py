@@ -16,8 +16,8 @@ def approximate(f, t0, t3 = None):
         f0 = f(t0)
         f3 = f(t3)
         diff_f = f.derivative()
-        diff_f0 = diff_f(f0)
-        diff_f3 = diff_f(f3)
+        diff_f0 = diff_f(t0)
+        diff_f3 = diff_f(t3)
         f1 = f0 + diff_f0 * (t3 - t0) / 3
         f2 = f3 - diff_f3 * (t3 - t0) / 3
         yield Cubic(t0, t3, f0, f1, f2, f3)
