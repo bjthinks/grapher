@@ -58,11 +58,11 @@ def graph(f):
             point3 = (c.t3, c.f3)
             path.move_to(point0)
             path.spline_to(control1, control2, point3)
-            canvas.add(Circle(point0))
-            canvas.add(Circle(point3))
+            canvas.add(Circle(control1))
+            canvas.add(Circle(control2))
             pixel = 4/500
-            canvas.add(Line((t1, c.f1-2*pixel), (t1, c.f1+2*pixel)))
-            canvas.add(Line((t2, c.f2-2*pixel), (t2, c.f2+2*pixel)))
+            canvas.add(Line((c.t0, c.f0-2*pixel), (c.t0, c.f0+2*pixel)))
+            canvas.add(Line((c.t3, c.f3-2*pixel), (c.t3, c.f3+2*pixel)))
         canvas.add(path)
     return "\n".join(canvas.output())
 
