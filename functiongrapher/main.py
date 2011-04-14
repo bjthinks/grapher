@@ -1,13 +1,18 @@
 #!/usr/bin/env python
 
+from __future__ import division
 import wsgiref.handlers
 import cgi
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
-from canvas import Canvas, Line, Path
+from canvas import Canvas, Line, Path, Circle
 from tokenize import tokenize, TokenizerError
 from parse import Parse, ParseError
+from approximate import approximate
+from slice import is_bounded
+from function import Function
+from interval import Interval
 
 class MyHandler(webapp.RequestHandler):
     def get(self, *groups):
@@ -43,32 +48,35 @@ def graph(f):
         canvas.add(Line(*pointpair))
     if f != None:
         path = Path()
-        pen_down = False
-        dx = 0.1
-        for x in [(x-20)/10. for x in xrange(41)]:
-            try:
-                point = (x,f(x))
-            except (ZeroDivisionError, ValueError):
-                pen_down = False
-            else:
-                if not pen_down:
-                    path.move_to(point)
-                    pen_down = True
-                else:
-                    try:
-                        control2 = (x-dx/3,f(x)+f.derivative()(x)*(-dx/3))
-                    except:
-                        control2 = None
-                    if control1 is None or control2 is None:
-                        path.line_to(point)
-                    else:
-                        path.spline_to(control1, control2, point)
-                try:
-                    control1 = (x+dx/3,f(x)+f.derivative()(x)*(dx/3))
-                except:
-                    control1 = None
+        cubics = recursively_generate_cubics(f, -2, 2)
+        for c in cubics:
+            t1 = (2*c.t0 + c.t3)/3
+            t2 = (c.t0 + 2*c.t3)/3
+            point0 = (c.t0, c.f0)
+            control1 = (t1, c.f1)
+            control2 = (t2, c.f2)
+            point3 = (c.t3, c.f3)
+            path.move_to(point0)
+            path.spline_to(control1, control2, point3)
+            canvas.add(Circle(point0))
+            canvas.add(Circle(point3))
+            pixel = 4/500
+            canvas.add(Line((t1, c.f1-2*pixel), (t1, c.f1+2*pixel)))
+            canvas.add(Line((t2, c.f2-2*pixel), (t2, c.f2+2*pixel)))
         canvas.add(path)
     return "\n".join(canvas.output())
+
+def recursively_generate_cubics(f, left, right, depth = 5):
+    for a in approximate(f, left, right):
+        if is_bounded(Function.sum(f, Function.product(
+                    Function.constant(-1), a)), Interval(left, right),
+                      Interval(-.008, .008)):
+            return [a]
+    if depth == 0:
+        return []
+    middle = (left + right) / 2
+    return recursively_generate_cubics(f, left, middle, depth-1) + \
+        recursively_generate_cubics(f, middle, right, depth-1)
 
 def lorem_ipsum():
     return '''<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque libero tellus, condimentum a tempus vel, placerat ut orci. Suspendisse potenti. Ut aliquam aliquet tincidunt. Mauris sit amet nulla tristique dolor convallis faucibus quis eget mauris. Vestibulum facilisis, urna quis viverra sodales, ante sem dapibus metus, ut aliquam diam tortor eu tellus. Sed at ipsum id augue porta tempor. Mauris ornare, urna sit amet luctus adipiscing, sapien massa pretium enim, et congue nibh diam aliquet elit. Sed arcu libero, pellentesque ac iaculis sed, mattis non justo. Nulla mauris ligula, bibendum id tincidunt in, vulputate ut mi. Aenean malesuada placerat turpis et sollicitudin. Nulla rhoncus magna vel turpis eleifend eget tristique erat volutpat. Nunc sapien nunc, interdum ac dictum ac, eleifend nec diam. Nunc fringilla aliquam congue. Curabitur bibendum tellus in est vulputate sed cursus massa iaculis.</p>
