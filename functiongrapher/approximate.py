@@ -26,6 +26,14 @@ class _ApproximationUnitTests(unittest.TestCase):
         for a in approximate(f, 0, 1):
             self.assertTrue(isinstance(a, Function))
             self.assertTrue(isinstance(a, Cubic))
+        for a in approximate(f, Interval(0, 1)):
+            self.assertTrue(isinstance(a, Function))
+            self.assertTrue(isinstance(a, Cubic))
+            # We may someday generate approximations that don't go through
+            # the endpoints, and remove these tests.  Until then, they
+            # help verify that the approximation formulas are correct.
+            self.assertEqual(a(0.0), 0.0)
+            self.assertEqual(a(1.0), 1.0)
 
         # (-x^2 - 1) ^ .5
         bad = Function.power(Function.sum(Function.product(
