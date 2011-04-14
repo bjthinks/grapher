@@ -14,6 +14,16 @@ class Line(object):
         return '<svg:line x1="{0}" y1="{1}" x2="{2}" y2="{3}" stroke="black" stroke-width="1"/>'.format(x1, y1, x2, y2)
 
 
+class Circle(object):
+
+    def __init__(self, center):
+        self.center = center
+
+    def svg(self, trans):
+        cx, cy = trans(self.center)
+        return '<svg:circle cx="{0}" cy="{1}" r="2" stroke="none" fill="black"/>'.format(cx, cy)
+
+
 class Path(object):
 
     def __init__(self):
@@ -99,6 +109,13 @@ class canvasTest(unittest.TestCase):
                          '<svg:line x1="0.0" y1="64.0" x2="128.0" y2="32.0" stroke="black" stroke-width="1"/>')
         self.assertEqual(line.start, (-6,10))
         self.assertEqual(line.end, (-2,12))
+
+    def test_circle(self):
+        canvas = Canvas(xpixels=256, ypixels=64, xmin=-6, xmax=2, ymin=10, ymax=14)
+        circle = Circle((-6,10))
+        self.assertEqual(circle.svg(canvas.xy_to_pixels),
+                         '<svg:circle cx="0.0" cy="64.0" r="2" stroke="none" fill="black"/>')
+        self.assertEqual(circle.center, (-6,10))
 
     def test_path_of_lines(self):
         canvas = Canvas(xpixels=256, ypixels=64, xmin=-6, xmax=2, ymin=10, ymax=14)
