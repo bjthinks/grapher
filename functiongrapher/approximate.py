@@ -10,6 +10,20 @@ def approximate(f, t0, t3 = None):
         (t0, t3) = t0.points
 
     # Each approximation lives in its own try-except block
+
+    try:
+        # A cubic using derivatives at endpoints
+        f0 = f(t0)
+        f3 = f(t3)
+        diff_f = f.derivative()
+        diff_f0 = diff_f(f0)
+        diff_f3 = diff_f(f3)
+        f1 = f0 + diff_f0 * (t3 - t0) / 3
+        f2 = f3 - diff_f3 * (t3 - t0) / 3
+        yield Cubic(t0, t3, f0, f1, f2, f3)
+    except ValueError:
+        pass
+
     try:
         # A straight line
         f0 = f(t0)
