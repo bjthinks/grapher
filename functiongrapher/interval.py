@@ -1,5 +1,5 @@
 from __future__ import division
-from math import floor, log, pi
+from math import floor, log, pi, sin, sqrt
 import unittest
 
 class Interval(object):
@@ -149,14 +149,25 @@ class Interval(object):
     def sin(self):
         '''Compute the sine of the interval.'''
         # sin([a,b]) is one of four things:
-        # 1. [sin a, sin b]
-        # 2. [-1, sin b]
-        # 3. [sin a, 1]
+        # 1. [min(sin a,sin b), max(sin a,sin b)]
+        # 2. [-1, max(sin a,sin b)]
+        # 3. [min(sin a,sin b), 1]
         # 4. [-1,1]
         # The upper limit is  1 if  pi/2+j(2pi) in [a,b] for some integer j
         # The lower limit is -1 if 3pi/2+k(2pi) in [a,b] for some integer k
-        # Otherwise the upper and lower limits are sin a and sin b
-        return Interval(-1,1)
+        # Otherwise the limits are min/max of sin a and sin b
+
+        def contains_multiple_2pi(blet):
+            return floor(blet.left/(2*pi)) < floor(blet.right/(2*pi))
+
+        (a,b) = self.points
+        lower = min(sin(a), sin(b))
+        upper = max(sin(a), sin(b))
+        if contains_multiple_2pi(self - pi/2):
+            upper = 1
+        if contains_multiple_2pi(self + pi/2):
+            lower = -1
+        return Interval(lower, upper)
 
     def cos(self):
         '''Compute the cosine of the interval.'''
@@ -257,9 +268,54 @@ class intervalTest(unittest.TestCase):
 
     def test_sin(self):
         self.assertTrue(Interval(2,4).sin() in Interval(-1,1))
+        sin_test = Interval(0,0).sin()
+        self.assertAlmostEqual(sin_test.left, 0)
+        self.assertAlmostEqual(sin_test.right, 0)
+        sin_test = Interval(0,pi/4).sin()
+        self.assertAlmostEqual(sin_test.left, 0)
+        self.assertAlmostEqual(sin_test.right, sqrt(.5))
+        sin_test = Interval(-pi/3,pi/6).sin()
+        self.assertAlmostEqual(sin_test.left, -sqrt(.75))
+        self.assertAlmostEqual(sin_test.right, .5)
+        sin_test = Interval(-pi/2,pi/2).sin()
+        self.assertAlmostEqual(sin_test.left, -1)
+        self.assertAlmostEqual(sin_test.right, 1)
+        sin_test = Interval(pi/3,2*pi/3).sin()
+        self.assertAlmostEqual(sin_test.left, sqrt(.75))
+        self.assertAlmostEqual(sin_test.right, 1)
+        sin_test = Interval(4*pi/3,5*pi/3).sin()
+        self.assertAlmostEqual(sin_test.left, -1)
+        self.assertAlmostEqual(sin_test.right, -sqrt(.75))
+        sin_test = Interval(pi/3,5*pi/3).sin()
+        self.assertAlmostEqual(sin_test.left, -1)
+        self.assertAlmostEqual(sin_test.right, 1)
+        sin_test = Interval(12*pi-pi/3,12*pi+pi/6).sin()
+        self.assertAlmostEqual(sin_test.left, -sqrt(.75))
+        self.assertAlmostEqual(sin_test.right, .5)
+        sin_test = Interval(pi/3,5*pi/6).sin()
+        self.assertAlmostEqual(sin_test.left, .5)
+        self.assertAlmostEqual(sin_test.right, 1)
+        sin_test = Interval(pi/6,3*pi/4).sin()
+        self.assertAlmostEqual(sin_test.left, .5)
+        self.assertAlmostEqual(sin_test.right, 1)
 
     def test_cos(self):
         self.assertTrue(Interval(2,4).cos() in Interval(-1,1))
+        cos_test = Interval(0,0).cos()
+        self.assertAlmostEqual(cos_test.left, 1)
+        self.assertAlmostEqual(cos_test.right, 1)
+        cos_test = Interval(pi/3,2*pi/3).cos()
+        self.assertAlmostEqual(cos_test.left, -.5)
+        self.assertAlmostEqual(cos_test.right, .5)
+        cos_test = Interval(pi/3,pi+.1).cos()
+        self.assertAlmostEqual(cos_test.left, -1)
+        self.assertAlmostEqual(cos_test.right, .5)
+        cos_test = Interval(-.1,2*pi/3).cos()
+        self.assertAlmostEqual(cos_test.left, -.5)
+        self.assertAlmostEqual(cos_test.right, 1)
+        cos_test = Interval(-.1,pi+.1).cos()
+        self.assertAlmostEqual(cos_test.left, -1)
+        self.assertAlmostEqual(cos_test.right, 1)
 
     def test_ops(self):
         # unary ops
