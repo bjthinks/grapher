@@ -1,5 +1,5 @@
 from __future__ import division
-from math import floor, log
+from math import floor, log, pi
 import unittest
 
 class Interval(object):
@@ -160,7 +160,6 @@ class Interval(object):
 
     def cos(self):
         '''Compute the cosine of the interval.'''
-        pi = 3.1415926535897932384626433832795028841971693993751
         return (self + pi/2).sin()
 
 
