@@ -5,10 +5,7 @@ from interval import Interval
 from cubic import Cubic
 
 
-def approximate(f, t0, t3 = None):
-    if isinstance(t0, Interval) and t3 is None:
-        (t0, t3) = t0.points
-
+def approximate(f, t0, t3):
     # Each approximation lives in its own try-except block
 
     try:
@@ -44,9 +41,6 @@ class _ApproximationUnitTests(unittest.TestCase):
     def test_approx(self):
         f = Function.identity()
         for a in approximate(f, 0, 1):
-            self.assertTrue(isinstance(a, Function))
-            self.assertTrue(isinstance(a, Cubic))
-        for a in approximate(f, Interval(0, 1)):
             self.assertTrue(isinstance(a, Function))
             self.assertTrue(isinstance(a, Cubic))
             # We may someday generate approximations that don't go through
