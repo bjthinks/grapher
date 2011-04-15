@@ -61,7 +61,7 @@ class _ApproximationUnitTests(unittest.TestCase):
                 Function.power(Function.identity(), Function.constant(2))),
                                           Function.constant(-1)),
                              Function.constant(.5))
-        self.assertEqual([a for a in approximate(bad, 0, 1)], [])
+        self.assertEqual(list(approximate(bad, 0, 1)), [])
 
     def test_cubic_derivative(self):
         a = cubic_derivative_approximation(
