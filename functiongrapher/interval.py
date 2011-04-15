@@ -148,11 +148,20 @@ class Interval(object):
 
     def sin(self):
         '''Compute the sine of the interval.'''
+        # sin([a,b]) is one of four things:
+        # 1. [sin a, sin b]
+        # 2. [-1, sin b]
+        # 3. [sin a, 1]
+        # 4. [-1,1]
+        # The upper limit is  1 if  pi/2+j(2pi) in [a,b] for some integer j
+        # The lower limit is -1 if 3pi/2+k(2pi) in [a,b] for some integer k
+        # Otherwise the upper and lower limits are sin a and sin b
         return Interval(-1,1)
 
     def cos(self):
         '''Compute the cosine of the interval.'''
-        return Interval(-1,1)
+        pi = 3.1415926535897932384626433832795028841971693993751
+        return (self + pi/2).sin()
 
 
 class intervalTest(unittest.TestCase):
