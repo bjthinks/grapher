@@ -26,7 +26,10 @@ class MyHandler(webapp.RequestHandler):
             nice = '<p>We sincerely apologize, but we could not understand what you typed.  Please repair your function at the indicated location and try again.</p>\n<pre>{0}\n{1}^</pre>\n'
             try:
                 tokens = list(tokenize(input))
-                function = Parse(tokens).go()
+                function = None
+                # If the only token is EOF then do nothing
+                if len(tokens) > 1:
+                    function = Parse(tokens).go()
             except TokenizerError, e:
                 error_message = nice.format(escaped_input, ' ' * e.position)
             except ParseError, e:

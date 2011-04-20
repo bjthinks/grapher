@@ -5,13 +5,22 @@ from interval import Interval
 
 
 def is_bounded(function, x_interval, y_interval, depth = 12):
-    '''Determine if a function is bounded by an interval, on an interval.'''
+    '''Determine if a function is bounded by an interval, on an interval.
+    If the function is not defined on the entire interval, or if we
+    can't determine if it's bounded by the y_interval, then return None.'''
 
-    if function(x_interval) in y_interval:
+    try:
+        function_left = function(x_interval.left)
+        function_right = function(x_interval.right)
+        function_interval = function(x_interval)
+    except ValueError:
+        return None
+
+    if function_interval in y_interval:
         return True
-    if not function(x_interval.left) in y_interval:
+    if not function_left in y_interval:
         return False
-    if not function(x_interval.right) in y_interval:
+    if not function_right in y_interval:
         return False
     # Under no circumstances should we recurse more than depth times
     if depth == 0:
@@ -71,6 +80,10 @@ class _SlicingUnitTests(unittest.TestCase):
                              Function.identity()))
         self.assertEqual(is_bounded(g, Interval(-1.5,1.5), Interval(-.9,1)),
                          False)
+        # This encounters a ValueError on the first split so should
+        # return None
+        h = Function.quotient(Function.constant(1), Function.identity())
+        self.assertTrue(is_bounded(h, Interval(-1,1), Interval(-5,5)) is None)
 
     def test_depth(self):
         f = Function.sum(Function.power(Function.identity(),
