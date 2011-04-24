@@ -53,6 +53,12 @@ class Cubic(WrappedFunction):
 
         WrappedFunction.__init__(self, term(d, term(c, term(b, Function.constant(a)))).weak_simplify())
 
+    @staticmethod
+    def endpoint_slope_factory(t0, t1, f0, f1, d0, d1):
+        c0 = f0 + d0 * (t1 - t0) / 3
+        c1 = f1 - d1 * (t1 - t0) / 3
+        return Cubic(t0, t1, f0, c0, c1, f1)
+
     @property
     def t0(self):
         return self.__t0
@@ -127,6 +133,15 @@ class _CubicUnitTests(unittest.TestCase):
         self.assertEqual(cubic.c0, 40)
         self.assertEqual(cubic.c1, 50)
         self.assertEqual(cubic.f1, 60)
+
+    def test_endpoint_slope_factory(self):
+        # x^3 - x^2 + 2x + 1 on t = [0,1]
+        # derivative: 3x^2 - 2x + 2
+        cubic = Cubic.endpoint_slope_factory(0, 1, 1, 3, 2, 3)
+        self.assertAlmostEqual(cubic(0), 1)
+        self.assertAlmostEqual(cubic(1), 3)
+        self.assertAlmostEqual(cubic(2), 9)
+        self.assertAlmostEqual(cubic(3), 25)
 
 
 if __name__ == '__main__':
