@@ -53,19 +53,19 @@ def graph(f):
         path = Path()
         cubics = recursively_generate_cubics(f, -2, 2)
         for c in cubics:
-            t1 = (2*c.t0 + c.t3)/3
-            t2 = (c.t0 + 2*c.t3)/3
+            t1_3 = (2*c.t0 + c.t1)/3
+            t2_3 = (c.t0 + 2*c.t1)/3
             point0 = (c.t0, c.f0)
-            control1 = (t1, c.f1)
-            control2 = (t2, c.f2)
-            point3 = (c.t3, c.f3)
+            control1 = (t1_3, c.c0)
+            control2 = (t2_3, c.c1)
+            point3 = (c.t1, c.f1)
             path.move_to(point0)
             path.spline_to(control1, control2, point3)
             canvas.add(Circle(control1))
             canvas.add(Circle(control2))
             pixel = 4/500
             canvas.add(Line((c.t0, c.f0-2*pixel), (c.t0, c.f0+2*pixel)))
-            canvas.add(Line((c.t3, c.f3-2*pixel), (c.t3, c.f3+2*pixel)))
+            canvas.add(Line((c.t1, c.f1-2*pixel), (c.t1, c.f1+2*pixel)))
         canvas.add(path)
     return "\n".join(canvas.output())
 

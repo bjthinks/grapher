@@ -58,7 +58,7 @@ class Cubic(WrappedFunction):
         return self.__t0
 
     @property
-    def t3(self):
+    def t1(self):
         return self.__t1
 
     @property
@@ -66,15 +66,15 @@ class Cubic(WrappedFunction):
         return self.__f0
 
     @property
-    def f1(self):
+    def c0(self):
         return self.__c0
 
     @property
-    def f2(self):
+    def c1(self):
         return self.__c1
 
     @property
-    def f3(self):
+    def f1(self):
         return self.__f1
 
 
@@ -122,11 +122,11 @@ class _CubicUnitTests(unittest.TestCase):
     def test_control_point_read_back(self):
         cubic = Cubic(10, 20, 30, 40, 50, 60)
         self.assertEqual(cubic.t0, 10)
-        self.assertEqual(cubic.t3, 20)
+        self.assertEqual(cubic.t1, 20)
         self.assertEqual(cubic.f0, 30)
-        self.assertEqual(cubic.f1, 40)
-        self.assertEqual(cubic.f2, 50)
-        self.assertEqual(cubic.f3, 60)
+        self.assertEqual(cubic.c0, 40)
+        self.assertEqual(cubic.c1, 50)
+        self.assertEqual(cubic.f1, 60)
 
 
 if __name__ == '__main__':
