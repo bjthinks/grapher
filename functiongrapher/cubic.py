@@ -28,27 +28,27 @@ class WrappedFunction(Function):
 
 
 class Cubic(WrappedFunction):
-    def __init__(self, t0, t3, f0, f1, f2, f3):
+    def __init__(self, t0, t1, f0, c0, c1, f1):
         self.__t0 = t0
-        self.__t3 = t3
+        self.__t1 = t1
         self.__f0 = f0
+        self.__c0 = c0
+        self.__c1 = c1
         self.__f1 = f1
-        self.__f2 = f2
-        self.__f3 = f3
 
         # The specific functional form will have consequences for the
         # efficiency of interval arithmetic (and thus, slicing).
 
-        # t' = (t-t0)/(t3-t0)
+        # t' = (t-t0)/(t1-t0)
         t = Function.product(Function.sum(Function.identity(), Function.constant(-t0)),
-                             Function.constant(1.0/(t3-t0)))
+                             Function.constant(1.0/(t1-t0)))
 
         omt = Function.sum(Function.constant(1), Function.product(Function.constant(-1), t))
         def term(const, f):
             return Function.sum(Function.constant(const), Function.product(t, f))
-        a = -f0 + 3*f1 - 3*f2 + f3
-        b = 3*f0 - 6*f1 + 3*f2
-        c = -3*f0 + 3*f1
+        a = -f0 + 3*c0 - 3*c1 + f1
+        b = 3*f0 - 6*c0 + 3*c1
+        c = -3*f0 + 3*c0
         d = f0
 
         WrappedFunction.__init__(self, term(d, term(c, term(b, Function.constant(a)))).weak_simplify())
@@ -59,7 +59,7 @@ class Cubic(WrappedFunction):
 
     @property
     def t3(self):
-        return self.__t3
+        return self.__t1
 
     @property
     def f0(self):
@@ -67,15 +67,15 @@ class Cubic(WrappedFunction):
 
     @property
     def f1(self):
-        return self.__f1
+        return self.__c0
 
     @property
     def f2(self):
-        return self.__f2
+        return self.__c1
 
     @property
     def f3(self):
-        return self.__f3
+        return self.__f1
 
 
 class _CubicUnitTests(unittest.TestCase):
