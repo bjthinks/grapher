@@ -19,15 +19,13 @@ def approximate(f, t0, t3):
         pass
 
 
-def cubic_derivative_approximation(f, t0, t3):
+def cubic_derivative_approximation(f, t0, t1):
     f0 = f(t0)
-    f3 = f(t3)
+    f1 = f(t1)
     diff_f = f.derivative()
-    diff_f0 = diff_f(t0)
-    diff_f3 = diff_f(t3)
-    f1 = f0 + diff_f0 * (t3 - t0) / 3
-    f2 = f3 - diff_f3 * (t3 - t0) / 3
-    return Cubic(t0, t3, f0, f1, f2, f3)
+    d0 = diff_f(t0)
+    d1 = diff_f(t1)
+    return Cubic.endpoint_slope_factory(t0, t1, f0, f1, d0, d1)
 
 
 def linear_approximation(f, t0, t3):
