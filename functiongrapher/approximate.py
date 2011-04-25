@@ -2,7 +2,7 @@ from __future__ import division
 import unittest
 from function import Function
 from interval import Interval
-from cubic import Cubic
+from cubic import CubicSpline
 
 
 def approximate(f, t0, t3):
@@ -25,14 +25,14 @@ def cubic_derivative_approximation(f, t0, t1):
     diff_f = f.derivative()
     d0 = diff_f(t0)
     d1 = diff_f(t1)
-    return Cubic.endpoint_slope_factory(t0, t1, f0, f1, d0, d1)
+    return CubicSpline.endpoint_slope_factory(t0, t1, f0, f1, d0, d1)
 
 
 def linear_approximation(f, t0, t1):
     f0 = f(t0)
     f1 = f(t1)
     slope = (f1-f0)/(t1-t0)
-    return Cubic.endpoint_slope_factory(t0, t1, f0, f1, slope, slope)
+    return CubicSpline.endpoint_slope_factory(t0, t1, f0, f1, slope, slope)
 
 
 class _ApproximationUnitTests(unittest.TestCase):
@@ -41,7 +41,7 @@ class _ApproximationUnitTests(unittest.TestCase):
         f = Function.identity()
         for a in approximate(f, 0, 1):
             self.assertTrue(isinstance(a, Function))
-            self.assertTrue(isinstance(a, Cubic))
+            self.assertTrue(isinstance(a, CubicSpline))
             # We may someday generate approximations that don't go through
             # the endpoints, and remove these tests.  Until then, they
             # help verify that the approximation formulas are correct.
