@@ -1,30 +1,7 @@
 from __future__ import division
 import unittest
-from function import Function
+from function import Function, WrappedFunction
 from interval import Interval
-
-
-class WrappedFunction(Function):
-    def __init__(self, wrapped):
-        self.__f = wrapped
-
-    def __call__(self, param):
-        return self.__f(param)
-
-    def derivative(self):
-        return self.__f.derivative()
-
-    def polynomial_degree(self):
-        return self.__f.polynomial_degree()
-
-    def weak_simplify(self):
-        return self.__f.weak_simplify()
-
-    def __str__(self):
-        return str(self.__f)
-
-    def __repr__(self):
-        return 'WrappedFunction({0})'.format(repr(self.__f))
 
 
 class CubicSpline(WrappedFunction):
