@@ -2,7 +2,7 @@ from __future__ import division
 import unittest
 from function import Function
 from interval import Interval
-from cubic import CubicSpline
+from cubicspline import CubicSpline
 
 
 def approximate(f, t0, t3):
