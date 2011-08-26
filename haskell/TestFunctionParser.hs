@@ -134,9 +134,11 @@ juxtaposeAndExponentialTests = [
                                                   FunctionVariable "y"],
   testSucc fJExpr (tok "-2x y") $ FunctionProduct [FunctionNumber $ negate 2.0,
                                                    FunctionVariable "x",
-                                                   FunctionVariable "y"]
+                                                   FunctionVariable "y"],
   -- The below test passes.  Is this bad?
-  -- testSucc fJExpr (tok "2 3") (FunctionNumber 6.0)
+  -- testSucc fJExpr (tok "2 3") (FunctionNumber 6.0),
+  testSucc fJExpr (tok "sin x^2") $ FunctionFunction "sin" $
+  FunctionPower (FunctionVariable "x") $ FunctionNumber 2.0
   ]
 
 tests = test (atomTests ++ rexprTests ++ functionTests ++
