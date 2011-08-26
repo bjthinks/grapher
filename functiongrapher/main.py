@@ -1,13 +1,16 @@
-#!/usr/bin/env python
-
+from __future__ import division
 import wsgiref.handlers
 import cgi
 from google.appengine.ext import db
 from google.appengine.ext import webapp
 from google.appengine.ext.webapp import template
-from canvas import Canvas
+from canvas import Canvas, Line, Path, Circle
 from tokenize import tokenize, TokenizerError
 from parse import Parse, ParseError
+from approximate import approximate
+from slice import is_bounded
+from function import Function
+from interval import Interval
 
 class MyHandler(webapp.RequestHandler):
     def get(self, *groups):
@@ -21,7 +24,10 @@ class MyHandler(webapp.RequestHandler):
             nice = '<p>We sincerely apologize, but we could not understand what you typed.  Please repair your function at the indicated location and try again.</p>\n<pre>{0}\n{1}^</pre>\n'
             try:
                 tokens = list(tokenize(input))
-                function = Parse(tokens).go()
+                function = None
+                # If the only token is EOF then do nothing
+                if len(tokens) > 1:
+                    function = Parse(tokens).go()
             except TokenizerError, e:
                 error_message = nice.format(escaped_input, ' ' * e.position)
             except ParseError, e:
@@ -38,15 +44,40 @@ class MyHandler(webapp.RequestHandler):
 		    template.render('error.html', {}))
 
 def graph(f):
-    linelist = [((-2,0), (2,0)), ((-2,0), (-1.92,.08)), ((-2,0), (-1.92,-.08)), ((2,0), (1.92,.08)), ((2,0), (1.92,-0.08)), ((0,-2), (0,2)), ((0,-2), (-.08,-1.92)), ((0,-2), (.08,-1.92)), ((0,2), (-.08,1.92)), ((0,2), (.08,1.92))]
+    canvas = Canvas()
+    for pointpair in [((-2,0), (2,0)), ((-2,0), (-1.92,.08)), ((-2,0), (-1.92,-.08)), ((2,0), (1.92,.08)), ((2,0), (1.92,-0.08)), ((0,-2), (0,2)), ((0,-2), (-.08,-1.92)), ((0,-2), (.08,-1.92)), ((0,2), (-.08,1.92)), ((0,2), (.08,1.92))]:
+        canvas.add(Line(*pointpair))
     if f != None:
-        dx = 0.1
-        for x in [(x-20)/10. for x in xrange(40)]:
-            try:
-                linelist.append(((x,f(x)), (x+dx,f(x+dx))))
-            except (ZeroDivisionError, ValueError):
-                pass
-    return "\n".join(Canvas().lines(linelist).output())
+        path = Path()
+        cubics = recursively_generate_cubics(f, -2, 2)
+        for c in cubics:
+            t1_3 = (2*c.t0 + c.t1)/3
+            t2_3 = (c.t0 + 2*c.t1)/3
+            point0 = (c.t0, c.f0)
+            control1 = (t1_3, c.c0)
+            control2 = (t2_3, c.c1)
+            point3 = (c.t1, c.f1)
+            path.move_to(point0)
+            path.spline_to(control1, control2, point3)
+            canvas.add(Circle(control1))
+            canvas.add(Circle(control2))
+            pixel = 4/500
+            canvas.add(Line((c.t0, c.f0-2*pixel), (c.t0, c.f0+2*pixel)))
+            canvas.add(Line((c.t1, c.f1-2*pixel), (c.t1, c.f1+2*pixel)))
+        canvas.add(path)
+    return "\n".join(canvas.output())
+
+def recursively_generate_cubics(f, left, right, depth = 5):
+    for a in approximate(f, left, right):
+        if is_bounded(Function.sum(f, Function.product(
+                    Function.constant(-1), a)), Interval(left, right),
+                      Interval(-.008, .008)):
+            return [a]
+    if depth == 0:
+        return []
+    middle = (left + right) / 2
+    return recursively_generate_cubics(f, left, middle, depth-1) + \
+        recursively_generate_cubics(f, middle, right, depth-1)
 
 def lorem_ipsum():
     return '''<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque libero tellus, condimentum a tempus vel, placerat ut orci. Suspendisse potenti. Ut aliquam aliquet tincidunt. Mauris sit amet nulla tristique dolor convallis faucibus quis eget mauris. Vestibulum facilisis, urna quis viverra sodales, ante sem dapibus metus, ut aliquam diam tortor eu tellus. Sed at ipsum id augue porta tempor. Mauris ornare, urna sit amet luctus adipiscing, sapien massa pretium enim, et congue nibh diam aliquet elit. Sed arcu libero, pellentesque ac iaculis sed, mattis non justo. Nulla mauris ligula, bibendum id tincidunt in, vulputate ut mi. Aenean malesuada placerat turpis et sollicitudin. Nulla rhoncus magna vel turpis eleifend eget tristique erat volutpat. Nunc sapien nunc, interdum ac dictum ac, eleifend nec diam. Nunc fringilla aliquam congue. Curabitur bibendum tellus in est vulputate sed cursus massa iaculis.</p>

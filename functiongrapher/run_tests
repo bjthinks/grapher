@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e
+
+for f in *.py
+do
+  if [ $f != main.py ]
+  then
+    echo "testing $f:"
+    python $f
+  fi
+done
